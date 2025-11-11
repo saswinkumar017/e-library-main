@@ -93,6 +93,12 @@ export const adminAPI = {
     api.get('/admin/books'),
   getBookStats: () =>
     api.get('/admin/books/stats'),
+  createBook: (data) =>
+    api.post('/books', data),
+  updateBook: (id, data) =>
+    api.put(`/books/${id}`, data),
+  deleteBook: (id) =>
+    api.delete(`/books/${id}`),
   getPrintoutStats: () =>
     api.get('/admin/printouts/stats'),
   generateReport: (reportType) =>
