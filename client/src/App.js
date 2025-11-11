@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import ELibrary from './pages/ELibrary';
 import BookDetail from './pages/BookDetail';
 import Printouts from './pages/Printouts';
+import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
@@ -74,6 +75,7 @@ function App() {
             <Route path="/e-library" element={<ELibrary />} />
             <Route path="/book/:id" element={<BookDetail />} />
             <Route path="/printouts" element={<Printouts />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           <Route element={<AdminRoute isLoggedIn={isLoggedIn} userRole={userRole} />}>

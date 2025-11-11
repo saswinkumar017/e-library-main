@@ -64,9 +64,9 @@ function Dashboard({ user }) {
             <div className="card-icon">👤</div>
             <h3>Profile</h3>
             <p>View your account details</p>
-            <button className="btn btn-primary">
+            <Link to="/profile" className="btn btn-primary">
               View Profile
-            </button>
+            </Link>
           </div>
         </div>
 
