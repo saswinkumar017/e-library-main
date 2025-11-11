@@ -26,7 +26,8 @@ function Login({ setIsLoggedIn, setUserRole, setUser }) {
       setUserRole(user.role);
       setUser(user);
 
-      navigate('/dashboard');
+      const redirectPath = user.role === 'admin' ? '/admin' : '/dashboard';
+      navigate(redirectPath);
     } catch (error) {
       setError(error.response?.data?.message || 'Login failed');
     } finally {

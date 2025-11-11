@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import ELibrary from './pages/ELibrary';
 import BookDetail from './pages/BookDetail';
 import Printouts from './pages/Printouts';
+import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
@@ -36,19 +37,45 @@ function App() {
     setUser(null);
   };
 
+  const getAuthenticatedRedirect = () => (userRole === 'admin' ? '/admin' : '/dashboard');
+
   return (
     <Router>
       <Layout isLoggedIn={isLoggedIn} userRole={userRole} user={user} onLogout={handleLogout}>
         <Routes>
-          <Route path="/" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
-          <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login setIsLoggedIn={setIsLoggedIn} setUserRole={setUserRole} setUser={setUser} />} />
-          <Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Register />} />
-          
-          <Route element={<PrivateRoute isLoggedIn={isLoggedIn} />}>
+          <Route
+            path="/"
+            element={
+              isLoggedIn ? <Navigate to={getAuthenticatedRedirect()} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              isLoggedIn ? (
+                <Navigate to={getAuthenticatedRedirect()} />
+              ) : (
+                <Login
+                  setIsLoggedIn={setIsLoggedIn}
+                  setUserRole={setUserRole}
+                  setUser={setUser}
+                />
+              )
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              isLoggedIn ? <Navigate to={getAuthenticatedRedirect()} /> : <Register />
+            }
+          />
+
+          <Route element={<PrivateRoute isLoggedIn={isLoggedIn} userRole={userRole} />}>
             <Route path="/dashboard" element={<Dashboard user={user} />} />
             <Route path="/e-library" element={<ELibrary />} />
             <Route path="/book/:id" element={<BookDetail />} />
             <Route path="/printouts" element={<Printouts />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           <Route element={<AdminRoute isLoggedIn={isLoggedIn} userRole={userRole} />}>
