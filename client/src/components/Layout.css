@@ -56,6 +56,17 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.nav-link-superadmin {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.nav-link-superadmin:hover {
+  background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+  transform: scale(1.05);
+}
+
 .nav-link-admin {
   background-color: #dc2626;
   color: white;
@@ -72,6 +83,11 @@
 
 .nav-link-register:hover {
   background-color: #1d4ed8;
+}
+
+.user-role {
+  font-size: 16px;
+  display: inline-block;
 }
 
 .user-menu {

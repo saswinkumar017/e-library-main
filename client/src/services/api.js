@@ -89,6 +89,10 @@ export const adminAPI = {
     api.put(`/admin/users/${userId}/demote`),
   deactivateUser: (userId) =>
     api.put(`/admin/users/${userId}/deactivate`),
+  reactivateUser: (userId) =>
+    api.put(`/admin/users/${userId}/reactivate`),
+  getAllAdmins: () =>
+    api.get('/admin/admins'),
   getAllBooks: () =>
     api.get('/admin/books'),
   getBookStats: () =>
@@ -101,6 +105,8 @@ export const adminAPI = {
     api.delete(`/books/${id}`),
   getPrintoutStats: () =>
     api.get('/admin/printouts/stats'),
+  getPendingPrintouts: () =>
+    api.get('/admin/printouts/pending'),
   generateReport: (reportType) =>
     api.get('/admin/reports', { params: { reportType } }),
 };

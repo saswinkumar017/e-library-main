@@ -6,7 +6,7 @@ function AdminRoute({ isLoggedIn, userRole }) {
     return <Navigate to="/login" />;
   }
 
-  return userRole === 'admin' ? <Outlet /> : <Navigate to="/dashboard" />;
+  return userRole === 'admin' || userRole === 'superadmin' ? <Outlet /> : <Navigate to="/dashboard" />;
 }
 
 export default AdminRoute;
