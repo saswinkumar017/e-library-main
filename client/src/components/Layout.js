@@ -21,12 +21,14 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
           <div className="navbar-menu">
             {isLoggedIn ? (
               <>
-                <Link to="/dashboard" className="nav-link">Dashboard</Link>
-                <Link to="/e-library" className="nav-link">E-Library</Link>
-                <Link to="/printouts" className="nav-link">Printouts</Link>
-                
-                {userRole === 'admin' && (
-                  <Link to="/admin" className="nav-link nav-link-admin">Admin</Link>
+                {userRole === 'admin' ? (
+                  <Link to="/admin" className="nav-link nav-link-admin">Admin Dashboard</Link>
+                ) : (
+                  <>
+                    <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                    <Link to="/e-library" className="nav-link">E-Library</Link>
+                    <Link to="/printouts" className="nav-link">Printouts</Link>
+                  </>
                 )}
 
                 <div className="user-menu">

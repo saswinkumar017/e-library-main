@@ -36,15 +36,40 @@ function App() {
     setUser(null);
   };
 
+  const getAuthenticatedRedirect = () => (userRole === 'admin' ? '/admin' : '/dashboard');
+
   return (
     <Router>
       <Layout isLoggedIn={isLoggedIn} userRole={userRole} user={user} onLogout={handleLogout}>
         <Routes>
-          <Route path="/" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
-          <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login setIsLoggedIn={setIsLoggedIn} setUserRole={setUserRole} setUser={setUser} />} />
-          <Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Register />} />
-          
-          <Route element={<PrivateRoute isLoggedIn={isLoggedIn} />}>
+          <Route
+            path="/"
+            element={
+              isLoggedIn ? <Navigate to={getAuthenticatedRedirect()} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              isLoggedIn ? (
+                <Navigate to={getAuthenticatedRedirect()} />
+              ) : (
+                <Login
+                  setIsLoggedIn={setIsLoggedIn}
+                  setUserRole={setUserRole}
+                  setUser={setUser}
+                />
+              )
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              isLoggedIn ? <Navigate to={getAuthenticatedRedirect()} /> : <Register />
+            }
+          />
+
+          <Route element={<PrivateRoute isLoggedIn={isLoggedIn} userRole={userRole} />}>
             <Route path="/dashboard" element={<Dashboard user={user} />} />
             <Route path="/e-library" element={<ELibrary />} />
             <Route path="/book/:id" element={<BookDetail />} />
