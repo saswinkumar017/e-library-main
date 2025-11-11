@@ -1,0 +1,338 @@
+.admin-dashboard {
+  padding: 20px 0;
+}
+
+.admin-header {
+  margin-bottom: 40px;
+}
+
+.admin-header h1 {
+  font-size: 32px;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.admin-header p {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.admin-navigation {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  padding: 15px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  color: #1f2937;
+}
+
+.nav-btn.active {
+  color: #dc2626;
+  border-bottom-color: #dc2626;
+}
+
+/* Overview Section */
+.overview-section {
+  display: grid;
+  gap: 40px;
+}
+
+.stats-card-group {
+  display: grid;
+  gap: 20px;
+}
+
+.stats-card-group h2 {
+  font-size: 22px;
+  color: #1f2937;
+  margin: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-left: 4px solid #2563eb;
+}
+
+.stat-icon {
+  font-size: 48px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.reports-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reports-section h2 {
+  font-size: 22px;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+}
+
+.report-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+/* Users Section */
+.users-section,
+.books-section {
+  display: grid;
+  gap: 20px;
+}
+
+.section-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-card h2 {
+  font-size: 22px;
+  color: #1f2937;
+  margin: 0 0 25px 0;
+}
+
+.users-table,
+.books-table {
+  display: grid;
+  gap: 15px;
+}
+
+.user-item,
+.book-item {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 30px;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.user-item:hover,
+.book-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #2563eb;
+}
+
+.user-info {
+  display: grid;
+  gap: 10px;
+}
+
+.user-info h4,
+.book-info h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.user-info p,
+.book-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.book-info .author {
+  font-style: italic;
+}
+
+.book-info .details {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.user-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.role-badge,
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.role-admin {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.role-user {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.user-stats,
+.book-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 15px;
+  text-align: center;
+}
+
+.user-stats .stat,
+.book-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.user-stats .label,
+.book-stats .label {
+  font-size: 12px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.user-stats .value,
+.book-stats .value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.book-stats .status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.book-stats .status.Available {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.book-stats .status.Issued {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1200px) {
+  .user-item,
+  .book-item {
+    grid-template-columns: 1fr;
+  }
+
+  .user-stats,
+  .book-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header h1 {
+    font-size: 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-icon {
+    font-size: 40px;
+  }
+
+  .report-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .user-stats,
+  .book-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .section-card {
+    padding: 20px 15px;
+  }
+
+  .user-item,
+  .book-item {
+    padding: 15px;
+  }
+
+  .user-actions {
+    flex-direction: column;
+  }
+
+  .user-actions .btn {
+    width: 100%;
+  }
+}
