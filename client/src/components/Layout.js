@@ -21,8 +21,10 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
           <div className="navbar-menu">
             {isLoggedIn ? (
               <>
-                {userRole === 'admin' ? (
-                  <Link to="/admin" className="nav-link nav-link-admin">Admin Dashboard</Link>
+                {userRole === 'superadmin' ? (
+                  <Link to="/superadmin" className="nav-link nav-link-superadmin">👑 SuperAdmin</Link>
+                ) : userRole === 'admin' ? (
+                  <Link to="/admin" className="nav-link nav-link-admin">⚙️ Admin Dashboard</Link>
                 ) : (
                   <>
                     <Link to="/dashboard" className="nav-link">Dashboard</Link>
@@ -33,6 +35,9 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
 
                 <div className="user-menu">
                   <span className="user-name">{user?.name}</span>
+                  <span className="user-role" data-role={userRole}>
+                    {userRole === 'superadmin' ? '👑' : userRole === 'admin' ? '⚙️' : '📖'}
+                  </span>
                   <button onClick={handleLogout} className="btn btn-small">
                     Logout
                   </button>

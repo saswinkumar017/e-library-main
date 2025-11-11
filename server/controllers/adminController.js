@@ -290,3 +290,56 @@ exports.deactivateUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.reactivateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isActive: true },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: 'User reactivated',
+      user
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getAllAdmins = async (req, res) => {
+  try {
+    const admins = await User.find({ role: 'admin' }).select('-password').sort({ createdAt: -1 });
+    
+    const adminsWithStats = admins.map(admin => ({
+      ...admin.toObject(),
+      totalBorrowedBooks: admin.borrowedBooks.length,
+      activeBorrowedBooks: admin.borrowedBooks.filter(b => !b.isReturned).length
+    }));
+
+    res.json(adminsWithStats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getPendingPrintouts = async (req, res) => {
+  try {
+    const pendingPrintouts = await Printout.find({ 
+      status: { $in: ['pending', 'processing'] }
+    }).sort({ createdAt: -1 });
+    
+    res.json({
+      total: pendingPrintouts.length,
+      printouts: pendingPrintouts
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -56,26 +56,6 @@ function AdminDashboard() {
     }
   };
 
-  const handlePromoteUser = async (userId) => {
-    try {
-      await adminAPI.promoteUserToAdmin(userId);
-      alert('User promoted to admin');
-      fetchAdminData();
-    } catch (error) {
-      alert('Failed to promote user');
-    }
-  };
-
-  const handleDemoteUser = async (userId) => {
-    try {
-      await adminAPI.demoteAdminToUser(userId);
-      alert('User demoted to regular user');
-      fetchAdminData();
-    } catch (error) {
-      alert('Failed to demote user');
-    }
-  };
-
   const handleDeactivateUser = async (userId) => {
     if (window.confirm('Are you sure you want to deactivate this user?')) {
       try {
@@ -204,7 +184,7 @@ function AdminDashboard() {
       <div className="container">
         <div className="admin-header">
           <h1>⚙️ Admin Dashboard</h1>
-          <p>Manage books, users, and view printout statistics</p>
+          <p>Manage books, receive printout requests, and monitor user activities</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -354,7 +334,14 @@ function AdminDashboard() {
         {activeTab === 'users' && (
           <div className="users-section">
             <div className="section-card">
-              <h2>All Users</h2>
+              <div className="section-header">
+                <div>
+                  <h2>All Users</h2>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
+                    ℹ️ Role management (promote/demote) is available only to SuperAdmin
+                  </p>
+                </div>
+              </div>
               {users.length === 0 ? (
                 <p>No users found</p>
               ) : (
@@ -392,24 +379,12 @@ function AdminDashboard() {
                       </div>
 
                       <div className="user-actions">
-                        {user.role === 'user' ? (
-                          <button
-                            onClick={() => handlePromoteUser(user._id)}
-                            className="btn btn-success btn-small"
-                          >
-                            Promote
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleDemoteUser(user._id)}
-                            className="btn btn-secondary btn-small"
-                          >
-                            Demote
-                          </button>
-                        )}
+                        <span className="info-text">Role: {user.role === 'user' ? '📖 Regular User' : '⚙️ Admin'}</span>
                         <button
                           onClick={() => handleDeactivateUser(user._id)}
                           className="btn btn-danger btn-small"
+                          disabled={user.role === 'admin'}
+                          title={user.role === 'admin' ? 'Contact SuperAdmin to manage admin users' : 'Deactivate this user'}
                         >
                           Deactivate
                         </button>

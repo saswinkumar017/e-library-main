@@ -6,6 +6,10 @@ function PrivateRoute({ isLoggedIn, userRole }) {
     return <Navigate to="/login" />;
   }
 
+  if (userRole === 'superadmin') {
+    return <Navigate to="/superadmin" />;
+  }
+
   if (userRole === 'admin') {
     return <Navigate to="/admin" />;
   }

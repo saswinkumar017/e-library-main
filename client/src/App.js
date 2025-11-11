@@ -10,8 +10,10 @@ import BookDetail from './pages/BookDetail';
 import Printouts from './pages/Printouts';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
+import SuperAdminRoute from './components/SuperAdminRoute';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,7 +39,11 @@ function App() {
     setUser(null);
   };
 
-  const getAuthenticatedRedirect = () => (userRole === 'admin' ? '/admin' : '/dashboard');
+  const getAuthenticatedRedirect = () => {
+    if (userRole === 'superadmin') return '/superadmin';
+    if (userRole === 'admin') return '/admin';
+    return '/dashboard';
+  };
 
   return (
     <Router>
@@ -80,6 +86,10 @@ function App() {
 
           <Route element={<AdminRoute isLoggedIn={isLoggedIn} userRole={userRole} />}>
             <Route path="/admin" element={<AdminDashboard />} />
+          </Route>
+
+          <Route element={<SuperAdminRoute isLoggedIn={isLoggedIn} userRole={userRole} />}>
+            <Route path="/superadmin" element={<SuperAdminDashboard />} />
           </Route>
         </Routes>
       </Layout>
