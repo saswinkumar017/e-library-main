@@ -11,6 +11,18 @@ function AdminDashboard() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAddBookForm, setShowAddBookForm] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    author: '',
+    genre: '',
+    publicationYear: '',
+    isbn: '',
+    description: '',
+    location: 'Main library',
+    totalCopies: 1
+  });
 
   useEffect(() => {
     fetchAdminData();
@@ -88,6 +100,94 @@ function AdminDashboard() {
       link.click();
     } catch (error) {
       alert('Failed to generate report');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'publicationYear' || name === 'totalCopies' ? parseInt(value) : value
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      author: '',
+      genre: '',
+      publicationYear: '',
+      isbn: '',
+      description: '',
+      location: 'Main library',
+      totalCopies: 1
+    });
+    setEditingBook(null);
+    setShowAddBookForm(false);
+  };
+
+  const handleAddBook = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!formData.title || !formData.author || !formData.genre || !formData.publicationYear) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await adminAPI.createBook(formData);
+      alert('Book added successfully');
+      resetForm();
+      fetchAdminData();
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to add book');
+    }
+  };
+
+  const handleEditBook = (book) => {
+    setEditingBook(book._id);
+    setFormData({
+      title: book.title,
+      author: book.author,
+      genre: book.genre,
+      publicationYear: book.publicationYear,
+      isbn: book.isbn || '',
+      description: book.description || '',
+      location: book.location,
+      totalCopies: book.totalCopies
+    });
+    setShowAddBookForm(true);
+  };
+
+  const handleUpdateBook = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!formData.title || !formData.author || !formData.genre || !formData.publicationYear) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await adminAPI.updateBook(editingBook, formData);
+      alert('Book updated successfully');
+      resetForm();
+      fetchAdminData();
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update book');
+    }
+  };
+
+  const handleDeleteBook = async (bookId) => {
+    if (window.confirm('Are you sure you want to delete this book?')) {
+      try {
+        await adminAPI.deleteBook(bookId);
+        alert('Book deleted successfully');
+        fetchAdminData();
+      } catch (error) {
+        alert('Failed to delete book');
+      }
     }
   };
 
@@ -325,7 +425,130 @@ function AdminDashboard() {
         {activeTab === 'books' && (
           <div className="books-section">
             <div className="section-card">
-              <h2>All Books</h2>
+              <div className="section-header">
+                <h2>All Books</h2>
+                <button
+                  onClick={() => setShowAddBookForm(!showAddBookForm)}
+                  className="btn btn-primary"
+                >
+                  {showAddBookForm ? 'Cancel' : '➕ Add New Book'}
+                </button>
+              </div>
+
+              {showAddBookForm && (
+                <form onSubmit={editingBook ? handleUpdateBook : handleAddBook} className="book-form">
+                  {error && <div className="alert alert-error">{error}</div>}
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="title">Title *</label>
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="author">Author *</label>
+                      <input
+                        type="text"
+                        id="author"
+                        name="author"
+                        value={formData.author}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="genre">Genre *</label>
+                      <input
+                        type="text"
+                        id="genre"
+                        name="genre"
+                        value={formData.genre}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="publicationYear">Publication Year *</label>
+                      <input
+                        type="number"
+                        id="publicationYear"
+                        name="publicationYear"
+                        value={formData.publicationYear}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="isbn">ISBN</label>
+                      <input
+                        type="text"
+                        id="isbn"
+                        name="isbn"
+                        value={formData.isbn}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="location">Location</label>
+                      <select
+                        id="location"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleInputChange}
+                      >
+                        <option>Main library</option>
+                        <option>Sub library</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="totalCopies">Total Copies</label>
+                      <input
+                        type="number"
+                        id="totalCopies"
+                        name="totalCopies"
+                        value={formData.totalCopies}
+                        onChange={handleInputChange}
+                        min="1"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="description">Description</label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows="3"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <button type="submit" className="btn btn-success">
+                      {editingBook ? 'Update Book' : 'Add Book'}
+                    </button>
+                    <button type="button" onClick={resetForm} className="btn btn-secondary">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
               {books.length === 0 ? (
                 <p>No books found</p>
               ) : (
@@ -362,6 +585,21 @@ function AdminDashboard() {
                             {book.status}
                           </span>
                         </div>
+                      </div>
+
+                      <div className="book-actions">
+                        <button
+                          onClick={() => handleEditBook(book)}
+                          className="btn btn-secondary btn-small"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBook(book._id)}
+                          className="btn btn-danger btn-small"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))}
