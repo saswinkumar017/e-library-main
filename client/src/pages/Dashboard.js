@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { userAPI } from '../services/api';
 import './Dashboard.css';
 
 function Dashboard({ user }) {
@@ -33,90 +32,108 @@ function Dashboard({ user }) {
     return <div className="spinner"></div>;
   }
 
+  const firstName = (user?.name || '').split(' ')[0] || 'there';
+
   return (
     <div className="dashboard">
       <div className="container">
-        <div className="welcome-section">
-          <h1>Welcome, {user?.name}!</h1>
-          <p>Manage your books, check availability, and print notes all in one place</p>
-        </div>
+        <section className="dashboard-hero">
+          <div className="hero-copy">
+            <span className="dashboard-eyebrow">Personal workspace</span>
+            <h1>Welcome back, {firstName}.</h1>
+            <p>
+              Stay ahead of deadlines, review your activity, and access the services you need in
+              one refined experience.
+            </p>
+          </div>
 
-        <div className="dashboard-grid">
-          <div className="dashboard-card">
-            <div className="card-icon">📚</div>
-            <h3>E-Library</h3>
-            <p>Browse and search for books</p>
+          <div className="hero-actions">
             <Link to="/e-library" className="btn btn-primary">
-              Go to E-Library
+              Browse collection
+            </Link>
+            <Link to="/printouts" className="btn btn-outline">
+              Request printouts
             </Link>
           </div>
-
-          <div className="dashboard-card">
-            <div className="card-icon">🖨️</div>
-            <h3>Printouts</h3>
-            <p>Upload and print your notes</p>
-            <Link to="/printouts" className="btn btn-primary">
-              Go to Printouts
-            </Link>
-          </div>
-
-          <div className="dashboard-card">
-            <div className="card-icon">👤</div>
-            <h3>Profile</h3>
-            <p>View your account details</p>
-            <Link to="/profile" className="btn btn-primary">
-              View Profile
-            </Link>
-          </div>
-        </div>
+        </section>
 
         {stats && (
-          <div className="stats-section">
-            <h2>Your Statistics</h2>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-number">{stats.borrowedBooks?.length || 0}</div>
-                <div className="stat-label">Books Borrowed</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.totalPrintoutsCount || 0}</div>
-                <div className="stat-label">Printouts Completed</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">₹{stats.totalPrintoutSpent || 0}</div>
-                <div className="stat-label">Spent on Printing</div>
-              </div>
+          <section className="stats-section">
+            <div className="stat-card">
+              <p className="stat-label">Active loans</p>
+              <p className="stat-number">{stats.borrowedBooks?.length || 0}</p>
+              <span className="stat-hint">Books currently issued to you</span>
             </div>
-          </div>
+            <div className="stat-card">
+              <p className="stat-label">Print jobs completed</p>
+              <p className="stat-number">{stats.totalPrintoutsCount || 0}</p>
+              <span className="stat-hint">Documents processed through the print studio</span>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Investment in printing</p>
+              <p className="stat-number">₹{stats.totalPrintoutSpent || 0}</p>
+              <span className="stat-hint">Total spent on high-quality printouts</span>
+            </div>
+          </section>
         )}
 
-        <div className="info-section">
-          <div className="info-card">
-            <h3>📖 About E-Library</h3>
+        <section className="feature-grid">
+          <article className="feature-card">
+            <span className="feature-tag">Library services</span>
+            <h3>Explore the curated catalogue</h3>
             <p>
-              Our E-Library is a comprehensive digital platform designed to make book management easy. 
-              Browse our collection, track your borrowed books, and keep track of due dates all in one place.
+              Search across departments, view availability in real time, and place holds on titles
+              essential to your coursework.
+            </p>
+            <Link to="/e-library" className="feature-link">
+              Enter E-Library
+            </Link>
+          </article>
+
+          <article className="feature-card">
+            <span className="feature-tag">Print studio</span>
+            <h3>Produce polished handouts</h3>
+            <p>
+              Upload documents, configure colour preferences, and manage payments with complete
+              transparency from start to finish.
+            </p>
+            <Link to="/printouts" className="feature-link">
+              Launch print request
+            </Link>
+          </article>
+
+          <article className="feature-card">
+            <span className="feature-tag">Profile & activity</span>
+            <h3>Keep your account in sync</h3>
+            <p>
+              Review borrowed titles, monitor spending, and ensure your contact details stay up to
+              date for seamless communication.
+            </p>
+            <Link to="/profile" className="feature-link">
+              Manage profile
+            </Link>
+          </article>
+        </section>
+
+        <section className="insight-panels">
+          <div className="insight-panel">
+            <h3>Resource planning guidance</h3>
+            <p>
+              Set reminders for return dates, organise readings by module, and create a personal
+              learning plan that keeps you focused throughout the semester.
             </p>
           </div>
 
-          <div className="info-card">
-            <h3>🖨️ Printing Service</h3>
-            <p>
-              Need to print your study materials? Upload your documents, choose between black & white 
-              or color printing, and make a quick payment through GPay. Your printouts will be ready in no time!
-            </p>
-          </div>
-
-          <div className="info-card">
-            <h3>⚡ Quick Tips</h3>
-            <ul className="tips-list">
-              <li>Set reminders for book due dates</li>
-              <li>Explore different genres to expand your knowledge</li>
-              <li>Use the search feature to find books quickly</li>
-              <li>Check book availability before visiting the library</li>
+          <div className="insight-panel">
+            <h3>Smart usage tips</h3>
+            <ul className="insight-list">
+              <li>Leverage advanced search to filter by author, genre, or location.</li>
+              <li>Track print history to repeat frequent orders in seconds.</li>
+              <li>Download receipts instantly for reimbursements and records.</li>
+              <li>Review upcoming due dates to avoid unexpected late fees.</li>
             </ul>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

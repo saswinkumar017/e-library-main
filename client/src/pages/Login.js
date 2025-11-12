@@ -39,8 +39,8 @@ function Login({ setIsLoggedIn, setUserRole, setUser }) {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>📚 E-Library</h1>
-          <p>Welcome Back!</p>
+          <h1>E-Library Suite</h1>
+          <p>Access your digital campus hub</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
