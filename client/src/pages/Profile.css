@@ -266,6 +266,43 @@
   color: #991b1b;
 }
 
+.status-badge.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.status-renewal {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.borrow-item-pending {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
+.borrow-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.borrow-digital-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.borrow-digital-link:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .profile-header h1 {
     font-size: 26px;
@@ -286,11 +323,17 @@
 
   .borrow-item-actions {
     width: 100%;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
   }
 
+  .borrow-action-buttons {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .borrow-action-buttons .btn,
   .borrow-item-actions .btn {
     width: 100%;
     min-width: 0;

@@ -59,6 +59,8 @@ export const bookAPI = {
     api.post('/books/borrow', { bookId }),
   returnBook: (bookId) =>
     api.post('/books/return', { bookId }),
+  renewBook: (bookId) =>
+    api.post('/books/renew', { bookId }),
 };
 
 export const printoutAPI = {
@@ -107,6 +109,10 @@ export const adminAPI = {
     api.get('/admin/printouts/stats'),
   getPendingPrintouts: () =>
     api.get('/admin/printouts/pending'),
+  getPendingBookReturns: () =>
+    api.get('/admin/books/returns/pending'),
+  verifyBookReturn: (copyId) =>
+    api.put(`/admin/books/returns/${copyId}/verify`),
   generateReport: (reportType) =>
     api.get('/admin/reports', { params: { reportType } }),
 };

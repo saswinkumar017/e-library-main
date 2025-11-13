@@ -166,7 +166,7 @@
   padding: 20px;
   border: 1px solid #e5e7eb;
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
   gap: 30px;
   align-items: center;
   transition: all 0.3s ease;
@@ -204,6 +204,21 @@
 .book-info .details {
   font-size: 12px;
   color: #9ca3af;
+}
+
+.book-info .book-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.book-info .book-link:hover {
+  text-decoration: underline;
 }
 
 .user-meta {
@@ -289,6 +304,84 @@
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.pending-returns-section {
+  margin-top: 30px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px dashed #c7d2fe;
+}
+
+.section-subheader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.section-subheader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background-color: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.empty-state-text {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+.pending-return-list {
+  display: grid;
+  gap: 15px;
+}
+
+.pending-return-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+}
+
+.pending-return-info h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.pending-return-info p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.pending-return-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pending-return-actions .btn {
+  min-width: 140px;
 }
 
 .info-text {
@@ -389,6 +482,21 @@
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .pending-return-item {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .pending-return-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pending-return-actions .btn {
+    width: 100%;
+    min-width: 0;
   }
 }
 

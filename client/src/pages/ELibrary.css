@@ -167,6 +167,12 @@
   border: 1px solid rgba(239, 68, 68, 0.32);
 }
 
+.availability-badge .digital {
+  background: rgba(59, 130, 246, 0.18);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.32);
+}
+
 .book-content {
   padding: 24px 24px 28px;
   flex: 1;
@@ -240,6 +246,17 @@
 .issued-info p {
   margin: 4px 0;
   color: #92400e;
+}
+
+.digital-info {
+  background: rgba(59, 130, 246, 0.12);
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #1d4ed8;
+  font-size: 12px;
+  margin-bottom: 12px;
+  line-height: 1.5;
 }
 
 .book-actions {

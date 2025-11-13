@@ -28,12 +28,16 @@ function App() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       setUserRole(parsedUser.role);
+      if (parsedUser?.id || parsedUser?._id) {
+        localStorage.setItem('userId', parsedUser.id || parsedUser._id);
+      }
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
     setIsLoggedIn(false);
     setUserRole(null);
     setUser(null);
