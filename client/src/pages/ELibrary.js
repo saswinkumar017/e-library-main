@@ -51,10 +51,14 @@ function ELibrary() {
     fetchBooks();
   }, [searchTerm, genre, location]);
 
-  const handleBorrow = async (bookId) => {
+  const handleBorrow = async (book) => {
     try {
-      await bookAPI.borrowBook(bookId);
-      alert('Book borrowed successfully! Due date is 14 days from today.');
+      await bookAPI.borrowBook(book._id);
+      if (book.category === 'online') {
+        alert('Online access granted for 15 days. Remember to renew to keep access active.');
+      } else {
+        alert('Book borrowed successfully! Please return it within the due date.');
+      }
       fetchBooks();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to borrow book');
@@ -124,72 +128,91 @@ function ELibrary() {
           </div>
         ) : (
           <div className="books-grid">
-            {filteredBooks.map((book) => (
-              <div key={book._id} className="book-card">
-                <div className="book-image">
-                  {book.coverImage ? (
-                    <img src={book.coverImage} alt={book.title} />
-                  ) : (
-                    <div className="no-image">📖</div>
-                  )}
-                  <div className="availability-badge">
-                    {book.availableCopies > 0 ? (
-                      <span className="available">Available</span>
+            {filteredBooks.map((book) => {
+              const isOnline = book.category === 'online';
+              const availabilityBadge = isOnline
+                ? <span className="available">Online</span>
+                : (book.availableCopies > 0
+                    ? <span className="available">Available</span>
+                    : <span className="issued">Issued</span>);
+              const availabilityLabel = isOnline ? 'Unlimited' : `${book.availableCopies}/${book.totalCopies}`;
+              const primaryActionLabel = isOnline
+                ? 'Access'
+                : book.availableCopies > 0
+                  ? 'Borrow'
+                  : 'Not Available';
+              const isActionDisabled = !isOnline && book.availableCopies === 0;
+
+              return (
+                <div key={book._id} className="book-card">
+                  <div className="book-image">
+                    {book.coverImage ? (
+                      <img src={book.coverImage} alt={book.title} />
                     ) : (
-                      <span className="issued">Issued</span>
+                      <div className="no-image">📖</div>
                     )}
+                    <div className="availability-badge">
+                      {availabilityBadge}
+                    </div>
+                  </div>
+
+                  <div className="book-content">
+                    <h3 className="book-title">{book.title}</h3>
+                    <p className="book-author">by {book.author}</p>
+                    <p className="book-genre">{book.genre}</p>
+
+                    <div className="book-details">
+                      <div className="detail-item">
+                        <span className="label">Type:</span>
+                        <span className="value">{isOnline ? 'Online Access' : 'Offline Stock'}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">Location:</span>
+                        <span className="value">{isOnline ? 'Digital Library' : book.location}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">Available:</span>
+                        <span className="value">{availabilityLabel}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">Year:</span>
+                        <span className="value">{book.publicationYear}</span>
+                      </div>
+                    </div>
+
+                    {book.issuedCopies.length > 0 && (
+                      <div className="issued-info">
+                        <p className="borrowed-by">
+                          <strong>Borrowed by:</strong> {book.issuedCopies[0]?.borrowerName}
+                        </p>
+                        <p className="due-date">
+                          <strong>{isOnline ? 'Renew By:' : 'Due Date:'}</strong>{' '}
+                          {book.issuedCopies[0]?.dueDate
+                            ? new Date(book.issuedCopies[0].dueDate).toLocaleDateString()
+                            : '—'}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="book-actions">
+                      <button
+                        onClick={() => handleViewDetails(book._id)}
+                        className="btn btn-secondary btn-small"
+                      >
+                        Details
+                      </button>
+                      <button
+                        onClick={() => handleBorrow(book)}
+                        className={`btn btn-primary btn-small ${isActionDisabled ? 'disabled' : ''}`}
+                        disabled={isActionDisabled}
+                      >
+                        {primaryActionLabel}
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <div className="book-content">
-                  <h3 className="book-title">{book.title}</h3>
-                  <p className="book-author">by {book.author}</p>
-                  <p className="book-genre">{book.genre}</p>
-
-                  <div className="book-details">
-                    <div className="detail-item">
-                      <span className="label">Location:</span>
-                      <span className="value">{book.location}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Available:</span>
-                      <span className="value">{book.availableCopies}/{book.totalCopies}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Year:</span>
-                      <span className="value">{book.publicationYear}</span>
-                    </div>
-                  </div>
-
-                  {book.issuedCopies.length > 0 && (
-                    <div className="issued-info">
-                      <p className="borrowed-by">
-                        <strong>Borrowed by:</strong> {book.issuedCopies[0]?.borrowerName}
-                      </p>
-                      <p className="due-date">
-                        <strong>Due Date:</strong> {new Date(book.issuedCopies[0]?.dueDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="book-actions">
-                    <button
-                      onClick={() => handleViewDetails(book._id)}
-                      className="btn btn-secondary btn-small"
-                    >
-                      Details
-                    </button>
-                    <button
-                      onClick={() => handleBorrow(book._id)}
-                      className="btn btn-primary btn-small"
-                      disabled={book.availableCopies === 0}
-                    >
-                      {book.availableCopies > 0 ? 'Borrow' : 'Not Available'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

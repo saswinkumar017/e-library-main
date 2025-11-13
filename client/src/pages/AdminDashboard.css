@@ -206,6 +206,46 @@
   color: #9ca3af;
 }
 
+.book-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.book-category-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.book-category-badge.online {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
+.book-category-badge.offline {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.book-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  margin-top: 8px;
+}
+
+.book-link:hover {
+  text-decoration: underline;
+}
+
 .user-meta {
   display: flex;
   gap: 10px;
@@ -283,12 +323,78 @@
   color: #991b1b;
 }
 
+.book-stats .status.Online {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
 .user-actions,
 .book-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.active-issues {
+  margin-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 15px;
+}
+
+.active-issues h5 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.active-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.active-issue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.borrower-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.borrower-dates {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.renewal-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.renewal-badge.overdue {
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 
 .info-text {
@@ -357,6 +463,20 @@
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.info-field {
+  padding: 12px;
+  border-radius: 6px;
+  background-color: #f3f4f6;
+  border: 1px dashed #cbd5f5;
+  font-size: 13px;
+  color: #1f2937;
 }
 
 .form-actions {

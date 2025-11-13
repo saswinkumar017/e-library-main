@@ -49,11 +49,19 @@ exports.getAllBooks = async (req, res) => {
   try {
     const books = await Book.find().sort({ createdAt: -1 });
     
-    const booksWithStats = books.map(book => ({
-      ...book.toObject(),
-      status: book.availableCopies > 0 ? 'Available' : 'Issued',
-      issuedCount: book.issuedCopies.filter(c => !c.isReturned).length
-    }));
+    const booksWithStats = books.map(book => {
+      const isOnline = book.category === 'online';
+      const activeIssues = book.issuedCopies.filter(c => !c.isReturned);
+
+      return {
+        ...book.toObject(),
+        totalCopies: isOnline ? null : book.totalCopies,
+        availableCopies: isOnline ? null : book.availableCopies,
+        status: isOnline ? 'Online' : (book.availableCopies > 0 ? 'Available' : 'Issued'),
+        issuedCount: activeIssues.length,
+        activeIssues
+      };
+    });
 
     res.json(booksWithStats);
   } catch (error) {
@@ -64,8 +72,10 @@ exports.getAllBooks = async (req, res) => {
 exports.getBookStats = async (req, res) => {
   try {
     const totalBooks = await Book.countDocuments();
+    const onlineBooks = await Book.countDocuments({ category: 'online' });
+    const offlineBooks = totalBooks - onlineBooks;
     
-    const bookStats = await Book.aggregate([
+    const [copyStats] = await Book.aggregate([
       {
         $group: {
           _id: null,
@@ -75,12 +85,16 @@ exports.getBookStats = async (req, res) => {
       }
     ]);
 
-    const issuedBooks = totalBooks > 0 ? bookStats[0].totalCopies - bookStats[0].availableCopies : 0;
+    const offlineCopyStats = copyStats || { totalCopies: 0, availableCopies: 0 };
+    const issuedBooks = Math.max(0, offlineCopyStats.totalCopies - offlineCopyStats.availableCopies);
 
     res.json({
       totalBooks,
-      ...bookStats[0],
-      issuedBooks: issuedBooks || 0,
+      onlineBooks,
+      offlineBooks,
+      totalCopies: offlineCopyStats.totalCopies,
+      availableCopies: offlineCopyStats.availableCopies,
+      issuedBooks,
       borrowReturnStats: await getBorrowReturnStats()
     });
   } catch (error) {
@@ -90,16 +104,25 @@ exports.getBookStats = async (req, res) => {
 
 const getBorrowReturnStats = async () => {
   const books = await Book.find();
+  const now = new Date();
   let totalBorrowed = 0;
   let totalReturned = 0;
-  let overdue = 0;
+  let offlineOverdue = 0;
+  let onlineRenewalsDue = 0;
+  let onlineActive = 0;
 
   books.forEach(book => {
     book.issuedCopies.forEach(copy => {
+      const copyCategory = copy.category || book.category;
       if (!copy.isReturned) {
         totalBorrowed += 1;
-        if (copy.dueDate < new Date()) {
-          overdue += 1;
+        if (copyCategory === 'online') {
+          onlineActive += 1;
+          if (copy.dueDate && copy.dueDate < now) {
+            onlineRenewalsDue += 1;
+          }
+        } else if (copy.dueDate && copy.dueDate < now) {
+          offlineOverdue += 1;
         }
       } else {
         totalReturned += 1;
@@ -107,7 +130,13 @@ const getBorrowReturnStats = async () => {
     });
   });
 
-  return { totalBorrowed, totalReturned, overdue };
+  return {
+    totalBorrowed,
+    totalReturned,
+    overdue: offlineOverdue,
+    onlineRenewalsDue,
+    onlineActive
+  };
 };
 
 exports.getPrintoutStats = async (req, res) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminAPI } from '../services/api';
+import { adminAPI, bookAPI } from '../services/api';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -21,8 +21,11 @@ function AdminDashboard() {
     isbn: '',
     description: '',
     location: 'Main library',
-    totalCopies: 1
+    totalCopies: 1,
+    category: 'offline',
+    googleDriveLink: ''
   });
+  const [processingReturnId, setProcessingReturnId] = useState('');
 
   useEffect(() => {
     fetchAdminData();
@@ -39,7 +42,7 @@ function AdminDashboard() {
           adminAPI.getPrintoutStats()
         ]);
         setUserStats(stats.data);
-        setBookStats(stats.data);
+        setBookStats(bookStats.data);
         setPrintoutStats(printStats.data);
       } else if (activeTab === 'users') {
         const response = await adminAPI.getAllUsers();
@@ -85,9 +88,27 @@ function AdminDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'category') {
+      const nextCategory = value;
+      setFormData(prev => ({
+        ...prev,
+        category: nextCategory,
+        location: nextCategory === 'online' ? 'Online' : 'Main library',
+        totalCopies:
+          nextCategory === 'online'
+            ? 0
+            : (typeof prev.totalCopies === 'number' && prev.totalCopies > 0 ? prev.totalCopies : 1),
+        googleDriveLink: nextCategory === 'online' ? prev.googleDriveLink : ''
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'publicationYear' || name === 'totalCopies' ? parseInt(value) : value
+      [name]: name === 'publicationYear' || name === 'totalCopies'
+        ? (value === '' ? '' : parseInt(value, 10))
+        : value
     }));
   };
 
@@ -100,7 +121,9 @@ function AdminDashboard() {
       isbn: '',
       description: '',
       location: 'Main library',
-      totalCopies: 1
+      totalCopies: 1,
+      category: 'offline',
+      googleDriveLink: ''
     });
     setEditingBook(null);
     setShowAddBookForm(false);
@@ -115,8 +138,26 @@ function AdminDashboard() {
       return;
     }
 
+    if (formData.category === 'offline' && (!formData.totalCopies || formData.totalCopies < 1)) {
+      setError('Offline books must have at least one available copy');
+      return;
+    }
+
+    if (formData.category === 'online' && !formData.googleDriveLink) {
+      setError('Please provide a Google Drive link for online books');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      publicationYear: Number(formData.publicationYear),
+      totalCopies: formData.category === 'offline' ? Number(formData.totalCopies) : undefined,
+      googleDriveLink: formData.category === 'online' ? formData.googleDriveLink.trim() : undefined,
+      location: formData.category === 'online' ? 'Online' : formData.location
+    };
+
     try {
-      await adminAPI.createBook(formData);
+      await adminAPI.createBook(payload);
       alert('Book added successfully');
       resetForm();
       fetchAdminData();
@@ -127,6 +168,7 @@ function AdminDashboard() {
 
   const handleEditBook = (book) => {
     setEditingBook(book._id);
+    const nextCategory = book.category || 'offline';
     setFormData({
       title: book.title,
       author: book.author,
@@ -134,8 +176,10 @@ function AdminDashboard() {
       publicationYear: book.publicationYear,
       isbn: book.isbn || '',
       description: book.description || '',
-      location: book.location,
-      totalCopies: book.totalCopies
+      location: nextCategory === 'online' ? 'Online' : book.location,
+      totalCopies: nextCategory === 'online' ? 0 : (book.totalCopies || 1),
+      category: nextCategory,
+      googleDriveLink: book.googleDriveLink || ''
     });
     setShowAddBookForm(true);
   };
@@ -149,8 +193,26 @@ function AdminDashboard() {
       return;
     }
 
+    if (formData.category === 'offline' && (!formData.totalCopies || formData.totalCopies < 1)) {
+      setError('Offline books must have at least one available copy');
+      return;
+    }
+
+    if (formData.category === 'online' && !formData.googleDriveLink) {
+      setError('Please provide a Google Drive link for online books');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      publicationYear: Number(formData.publicationYear),
+      totalCopies: formData.category === 'offline' ? Number(formData.totalCopies) : undefined,
+      googleDriveLink: formData.category === 'online' ? formData.googleDriveLink.trim() : undefined,
+      location: formData.category === 'online' ? 'Online' : formData.location
+    };
+
     try {
-      await adminAPI.updateBook(editingBook, formData);
+      await adminAPI.updateBook(editingBook, payload);
       alert('Book updated successfully');
       resetForm();
       fetchAdminData();
@@ -168,6 +230,29 @@ function AdminDashboard() {
       } catch (error) {
         alert('Failed to delete book');
       }
+    }
+  };
+
+  const handleConfirmReturn = async (bookId, borrowerId, category) => {
+    if (!borrowerId) {
+      alert('Borrower information is required to verify this return.');
+      return;
+    }
+
+    if (category === 'online') {
+      alert('Online books do not require admin verification for returns.');
+      return;
+    }
+
+    try {
+      setProcessingReturnId(`${bookId}-${borrowerId}`);
+      await bookAPI.returnBook(bookId, borrowerId);
+      alert('Offline return verified successfully');
+      fetchAdminData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to verify return');
+    } finally {
+      setProcessingReturnId('');
     }
   };
 
@@ -274,7 +359,31 @@ function AdminDashboard() {
                   <div className="stat-icon">⏰</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.borrowReturnStats?.overdue || 0}</div>
-                    <div className="stat-label">Overdue Books</div>
+                    <div className="stat-label">Offline Overdue</div>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-icon">🌐</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{bookStats?.onlineBooks || 0}</div>
+                    <div className="stat-label">Online Titles</div>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-icon">🔁</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{bookStats?.borrowReturnStats?.onlineRenewalsDue || 0}</div>
+                    <div className="stat-label">Renewals Due</div>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-icon">👥</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{bookStats?.borrowReturnStats?.onlineActive || 0}</div>
+                    <div className="stat-label">Active Online Readers</div>
                   </div>
                 </div>
               </div>
@@ -466,6 +575,38 @@ function AdminDashboard() {
 
                   <div className="form-row">
                     <div className="form-group">
+                      <label htmlFor="category">Category *</label>
+                      <select
+                        id="category"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="offline">Offline (Physical)</option>
+                        <option value="online">Online (Digital)</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="location">Location</label>
+                      <select
+                        id="location"
+                        name="location"
+                        value={formData.category === 'online' ? 'Online' : formData.location}
+                        onChange={handleInputChange}
+                        disabled={formData.category === 'online'}
+                      >
+                        <option>Main library</option>
+                        <option>Sub library</option>
+                      </select>
+                      {formData.category === 'online' && (
+                        <small className="form-hint">Online books are accessible digitally.</small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
                       <label htmlFor="isbn">ISBN</label>
                       <input
                         type="text"
@@ -476,30 +617,40 @@ function AdminDashboard() {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="location">Location</label>
-                      <select
-                        id="location"
-                        name="location"
-                        value={formData.location}
+                      <label htmlFor="googleDriveLink">
+                        {formData.category === 'online' ? 'Google Drive Link *' : 'Google Drive Link'}
+                      </label>
+                      <input
+                        type="url"
+                        id="googleDriveLink"
+                        name="googleDriveLink"
+                        value={formData.googleDriveLink}
                         onChange={handleInputChange}
-                      >
-                        <option>Main library</option>
-                        <option>Sub library</option>
-                      </select>
+                        placeholder={formData.category === 'online' ? 'https://drive.google.com/...' : 'Not required for offline books'}
+                        required={formData.category === 'online'}
+                        disabled={formData.category !== 'online'}
+                      />
                     </div>
                   </div>
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label htmlFor="totalCopies">Total Copies</label>
-                      <input
-                        type="number"
-                        id="totalCopies"
-                        name="totalCopies"
-                        value={formData.totalCopies}
-                        onChange={handleInputChange}
-                        min="1"
-                      />
+                      <label htmlFor="totalCopies">
+                        {formData.category === 'offline' ? 'Total Copies *' : 'Stock'}
+                      </label>
+                      {formData.category === 'offline' ? (
+                        <input
+                          type="number"
+                          id="totalCopies"
+                          name="totalCopies"
+                          value={formData.totalCopies}
+                          onChange={handleInputChange}
+                          min="1"
+                          required
+                        />
+                      ) : (
+                        <div className="info-field">Unlimited digital access (no stock tracking)</div>
+                      )}
                     </div>
                     <div className="form-group">
                       <label htmlFor="description">Description</label>
@@ -528,56 +679,117 @@ function AdminDashboard() {
                 <p>No books found</p>
               ) : (
                 <div className="books-table">
-                  {books.map((book) => (
-                    <div key={book._id} className="book-item">
-                      <div className="book-info">
-                        <h4>{book.title}</h4>
-                        <p className="author">by {book.author}</p>
-                        <p className="details">
-                          {book.genre} • {book.publicationYear} • {book.location}
-                        </p>
-                      </div>
+                  {books.map((book) => {
+                    const isOnline = book.category === 'online';
+                    const activeIssues = Array.isArray(book.activeIssues)
+                      ? book.activeIssues
+                      : (Array.isArray(book.issuedCopies) ? book.issuedCopies.filter(issue => !issue.isReturned) : []);
 
-                      <div className="book-stats">
-                        <div className="stat">
-                          <span className="label">Total:</span>
-                          <span className="value">{book.totalCopies}</span>
+                    return (
+                      <div key={book._id} className="book-item">
+                        <div className="book-info">
+                          <div className="book-info-header">
+                            <h4>{book.title}</h4>
+                            <span className={`book-category-badge ${isOnline ? 'online' : 'offline'}`}>
+                              {isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          </div>
+                          <p className="author">by {book.author}</p>
+                          <p className="details">
+                            {book.genre} • {book.publicationYear} • {isOnline ? 'Digital access' : book.location}
+                          </p>
+                          {isOnline && book.googleDriveLink && (
+                            <a
+                              href={book.googleDriveLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="book-link"
+                            >
+                              Open Access Link ↗
+                            </a>
+                          )}
                         </div>
-                        <div className="stat">
-                          <span className="label">Available:</span>
-                          <span className="value" style={{ color: '#16a34a' }}>
-                            {book.availableCopies}
-                          </span>
-                        </div>
-                        <div className="stat">
-                          <span className="label">Issued:</span>
-                          <span className="value" style={{ color: '#dc2626' }}>
-                            {book.issuedCount}
-                          </span>
-                        </div>
-                        <div className="stat">
-                          <span className={`status ${book.status}`}>
-                            {book.status}
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="book-actions">
-                        <button
-                          onClick={() => handleEditBook(book)}
-                          className="btn btn-secondary btn-small"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteBook(book._id)}
-                          className="btn btn-danger btn-small"
-                        >
-                          Delete
-                        </button>
+                        <div className="book-stats">
+                          <div className="stat">
+                            <span className="label">Total:</span>
+                            <span className="value">{isOnline ? '∞' : book.totalCopies}</span>
+                          </div>
+                          <div className="stat">
+                            <span className="label">Available:</span>
+                            <span className="value" style={{ color: '#16a34a' }}>
+                              {isOnline ? 'Unlimited' : book.availableCopies}
+                            </span>
+                          </div>
+                          <div className="stat">
+                            <span className="label">{isOnline ? 'Active Access' : 'Issued'}</span>
+                            <span className="value" style={{ color: '#dc2626' }}>
+                              {book.issuedCount}
+                            </span>
+                          </div>
+                          <div className="stat">
+                            <span className={`status ${book.status}`}>
+                              {book.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        {activeIssues.length > 0 && (
+                          <div className="active-issues">
+                            <h5>{isOnline ? 'Active Readers' : 'Pending Returns'}</h5>
+                            <div className="active-issues-list">
+                              {activeIssues.map((issue) => {
+                                const borrowerId = issue.userId?._id || issue.userId;
+                                const dueDate = issue.dueDate ? new Date(issue.dueDate) : null;
+                                const issueDate = issue.issueDate ? new Date(issue.issueDate) : null;
+                                const isOverdue = dueDate ? dueDate < new Date() : false;
+                                const processingKey = `${book._id}-${borrowerId}`;
+
+                                return (
+                                  <div key={processingKey} className="active-issue-item">
+                                    <div>
+                                      <p className="borrower-name">{issue.borrowerName || 'Borrower'}</p>
+                                      <p className="borrower-dates">
+                                        Issued: {issueDate ? issueDate.toLocaleDateString() : '—'} • Due: {dueDate ? dueDate.toLocaleDateString() : '—'}
+                                      </p>
+                                    </div>
+                                    {isOnline ? (
+                                      <span className={`renewal-badge ${isOverdue ? 'overdue' : ''}`}>
+                                        Renew by {dueDate ? dueDate.toLocaleDateString() : '—'}
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleConfirmReturn(book._id, borrowerId, book.category)}
+                                        className="btn btn-success btn-small"
+                                        disabled={processingReturnId === processingKey}
+                                      >
+                                        {processingReturnId === processingKey ? 'Verifying…' : 'Verify Return'}
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="book-actions">
+                          <button
+                            onClick={() => handleEditBook(book)}
+                            className="btn btn-secondary btn-small"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBook(book._id)}
+                            className="btn btn-danger btn-small"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
