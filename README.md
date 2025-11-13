@@ -1,329 +1,242 @@
-
 # E-Library System
 
-A comprehensive digital platform for managing academic resources, tracking book availability, and printing study materials with secure payment integration.
+## Overview
+The E-Library System is an integrated web platform that streamlines access to academic resources, document printing, and administrative oversight. It combines a React-based client with a Node.js/Express backend and MongoDB persistence to deliver a secure experience for students, librarians, and institutional administrators.
 
-## Features
+## Feature Highlights
+### Regular Members
+- Self-service registration and secure authentication with JWT
+- Personal dashboard with borrowing, printout, and spending insights
+- Advanced search across title, author, genre, and location
+- Real-time visibility into availability, borrower status, and due dates
+- End-to-end management of borrowing and returns
+- Online submission and tracking of printout requests, including payment confirmation
 
-### User Features
-- **Account Management**
-  - Create account with Gmail ID
-  - Secure authentication with JWT
-  - Personal dashboard with statistics
+### Administrators
+- Role-based access to an administrative dashboard
+- Consolidated statistics for users, inventory, and revenue
+- End-user directory with engagement metrics and account controls
+- Full book catalogue management with create, update, and delete capabilities
+- Printout monitoring and status management
+- Automated generation of JSON reports for users, books, and printouts
 
-- **E-Library Section**
-  - Browse and search books by name, author, or genre
-  - View book details (title, author, genre, publication year, ISBN)
-  - Check availability status (Available/Issued)
-  - See book location (Main library/Sub library)
-  - Track borrower information and due dates
-  - Borrow and return books
+### Super Administrator
+- Dedicated control centre with system-wide metrics
+- Promotion, demotion, activation, and reactivation of user accounts
+- Segmented views for regular members and administrator cohorts
+- Export tooling for policy, audit, and compliance reporting
 
-- **Printout Service**
-  - Upload documents directly
-  - Choose printing options:
-    - Black & White (₹1 per page)
-    - Color (₹3 per page)
-  - Select number of copies (1-10)
-  - GPay payment integration
-  - Track printing history
+## Technology Stack
+- **Frontend:** React 18, React Router v6, Axios, modular CSS
+- **Backend:** Node.js, Express.js, JWT, bcrypt, Multer for uploads
+- **Database:** MongoDB with Mongoose ODM
+- **Build Tooling:** npm workspaces with dedicated client and server packages
 
-### Admin Features
-- **Dashboard Overview**
-  - User statistics (total users, admin users, regular users)
-  - Book statistics (total books, available copies, issued books, overdue books)
-  - Printout statistics (total printouts, revenue)
-
-- **User Management**
-  - View all users with their statistics
-  - Promote users to admin
-  - Demote admin to regular user
-  - Deactivate users
-
-- **Book Management**
-  - View all books with status
-  - Create, update, and delete books
-  - Track book circulation
-
-- **Reporting**
-  - Generate comprehensive reports:
-    - User borrow history and printout spending
-    - Book availability and circulation
-    - Printout revenue and statistics
-
-## Tech Stack
-
-### Frontend
-- React.js 18
-- React Router v6
-- Axios for API calls
-- CSS3 for styling
-
-### Backend
-- Node.js with Express.js
-- MongoDB for database
-- JWT for authentication
-- Bcrypt for password hashing
-- Multer for file uploads
-
-### Database
-- MongoDB
-- Mongoose ODM
-
-## Project Structure
-
+## System Architecture
 ```
 e-library-system/
-├── client/                 # React frontend
+├── client/                 # React application
 │   ├── public/
 │   ├── src/
-│   │   ├── components/    # Reusable components
-│   │   ├── pages/         # Page components
-│   │   ├── services/      # API service
+│   │   ├── components/    # Layout, navigation, shared UI elements
+│   │   ├── pages/         # Route-level views for each role
+│   │   ├── services/      # API integrations
 │   │   ├── App.js
 │   │   └── index.js
 │   └── package.json
-├── server/                # Node.js backend
-│   ├── controllers/       # Route controllers
-│   ├── middleware/        # Authentication middleware
-│   ├── models/            # Mongoose models
-│   ├── routes/            # API routes
+├── server/                # Express API
+│   ├── controllers/       # Route handlers
+│   ├── middleware/        # Authentication and authorization logic
+│   ├── models/            # Mongoose schemas
+│   ├── routes/            # REST endpoints
 │   ├── server.js
 │   ├── .env.example
 │   └── package.json
-├── .gitignore
-├── package.json           # Root package.json
+├── package.json           # Root workspace configuration
+├── package-lock.json
 └── README.md
 ```
 
-## Installation
-
+## Getting Started
 ### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB (local or Atlas)
-- npm or yarn
+- Node.js 16 or higher
+- npm 8 or higher
+- Local or hosted MongoDB instance
 
-### Setup Steps
+### Installation
+```bash
+git clone <repository-url>
+cd e-library-system
+npm run install-all
+```
 
-1. **Clone the repository**
-   ```bash
-   cd /home/engine/project
-   ```
+## Configuration
+Create a `.env` file in the `server` directory using the following template:
+```
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/e-library
+JWT_SECRET=<secure-random-string>
+NODE_ENV=development
+```
 
-2. **Install dependencies**
-   ```bash
-   npm run install-all
-   ```
+## Running the Application
+**Option 1: Unified development experience**
+```bash
+npm run dev
+```
 
-3. **Configure environment variables**
+**Option 2: Run services separately**
+```bash
+# Backend
+env $(cat server/.env | xargs) npm run --prefix server dev
 
-   Create a `.env` file in the `server` directory:
-   ```
-   PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/e-library
-   JWT_SECRET=your_jwt_secret_key_here
-   NODE_ENV=development
-   ```
+# Frontend
+npm run --prefix client start
+```
 
-4. **Start MongoDB**
-   ```bash
-   # If using local MongoDB
-   mongod
-   ```
+Frontend is available at `http://localhost:3000` and the REST API at `http://localhost:5000/api`.
 
-5. **Run the application**
+## Key Workflows
+### Regular Members
+1. Register or authenticate via the login interface.
+2. Browse titles, review metadata, and initiate borrowing.
+3. Submit printout requests with preferred colour mode and copies.
+4. Track outstanding loans, printout status, and spending in the dashboard.
 
-   Option 1: Run both frontend and backend concurrently
-   ```bash
-   npm run dev
-   ```
+### Administrators
+1. Sign in and navigate to the administrator dashboard.
+2. Review summary analytics for user activity, book inventory, and print orders.
+3. Manage user accounts, deactivate inactive profiles, and maintain catalogues.
+4. Produce structured reports for audit and operational review.
 
-   Option 2: Run separately
-   ```bash
-   # Terminal 1 - Backend
-   npm run server
+### Super Administrator
+1. Access the super administrator suite via role-restricted navigation.
+2. Monitor overall system health, user segmentation, and revenue trends.
+3. Promote or demote accounts, and reactivate users as required.
+4. Export comprehensive datasets to support governance and compliance.
 
-   # Terminal 2 - Frontend
-   npm run client
-   ```
-
-6. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000/api
-
-## API Endpoints
+## API Summary
+All endpoints are namespaced under `/api`.
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/google-login` - Google OAuth login
-- `GET /api/auth/profile` - Get user profile
+- `POST /auth/register` – Register a new member
+- `POST /auth/login` – Authenticate an existing user
+- `POST /auth/google-login` – Google OAuth login
+- `GET /auth/profile` – Retrieve the authenticated user profile
 
 ### Books
-- `GET /api/books` - Get all books (with filters)
-- `GET /api/books/:id` - Get book details
-- `GET /api/books/:id/availability` - Check book availability
-- `POST /api/books` - Create book (admin only)
-- `PUT /api/books/:id` - Update book (admin only)
-- `DELETE /api/books/:id` - Delete book (admin only)
-- `POST /api/books/borrow` - Borrow a book
-- `POST /api/books/return` - Return a book
+- `GET /books` – List titles with available filters
+- `GET /books/:id` – Retrieve detailed book metadata
+- `POST /books` – Create a book (administrator only)
+- `PUT /books/:id` – Update a book (administrator only)
+- `DELETE /books/:id` – Remove a book (administrator only)
+- `POST /books/borrow` – Borrow a title
+- `POST /books/return` – Return a title
 
 ### Printouts
-- `POST /api/printouts` - Create printout request
-- `POST /api/printouts/confirm-payment` - Confirm payment
-- `GET /api/printouts/history` - Get user's printout history
-- `GET /api/printouts/:id` - Get printout details
-- `PUT /api/printouts/:printoutId/status` - Update status (admin only)
-- `DELETE /api/printouts/:printoutId` - Cancel printout
+- `POST /printouts` – Submit a printout request
+- `POST /printouts/confirm-payment` – Confirm payment completion
+- `GET /printouts/history` – Retrieve member printout history
+- `GET /printouts/:id` – Retrieve printout details
+- `PUT /printouts/:printoutId/status` – Update printout status (administrator only)
+- `DELETE /printouts/:printoutId` – Cancel a printout request
 
-### Admin
-- `GET /api/admin/users` - Get all users
-- `GET /api/admin/users/stats` - Get user statistics
-- `GET /api/admin/users/:userId/borrow-history` - Get user's borrow history
-- `PUT /api/admin/users/:userId/promote` - Promote user to admin
-- `PUT /api/admin/users/:userId/demote` - Demote admin to user
-- `PUT /api/admin/users/:userId/deactivate` - Deactivate user
-- `GET /api/admin/books` - Get all books
-- `GET /api/admin/books/stats` - Get book statistics
-- `GET /api/admin/printouts/stats` - Get printout statistics
-- `GET /api/admin/reports` - Generate reports
-
-## Usage
-
-### For Regular Users
-
-1. **Register/Login**
-   - Create account with email or login with existing credentials
-
-2. **Browse E-Library**
-   - Use search functionality to find books
-   - Filter by genre or location
-   - View detailed book information
-
-3. **Borrow Books**
-   - Click "Borrow" button on any available book
-   - Book will be added to your borrowed list with 14-day due date
-
-4. **Print Documents**
-   - Go to Printouts section
-   - Upload document details
-   - Choose color mode (BW or Color)
-   - Select number of copies
-   - Proceed to payment via GPay
-   - Track printout status in history
-
-### For Admins
-
-1. **Access Admin Dashboard**
-   - Click "Admin" link in navigation (only visible to admins)
-
-2. **View Statistics**
-   - Overview tab shows all key metrics
-   - User, book, and printout statistics
-
-3. **Manage Users**
-   - View all users with their activity
-   - Promote/demote admin privileges
-   - Deactivate inactive users
-
-4. **Track Books**
-   - View all books in system
-   - See availability and circulation status
-
-5. **Generate Reports**
-   - Download JSON reports for users, books, and printouts
-   - Use for analysis and record-keeping
-
-## Pricing
-
-### Printing Service
-- **Black & White:** ₹1 per page
-- **Color:** ₹3 per page
-- **Example:** 10 pages, 2 copies, Color = ₹60
-
-### Book Borrowing
-- **Duration:** 14 days
-- **Late penalties:** As per institutional policy
+### Administration
+- `GET /admin/users` – Retrieve all users with summary metrics
+- `GET /admin/users/stats` – User statistics for dashboards
+- `GET /admin/users/:userId/borrow-history` – Borrowing activity
+- `PUT /admin/users/:userId/promote` – Promote to administrator (super administrator only)
+- `PUT /admin/users/:userId/demote` – Revoke administrator privileges (super administrator only)
+- `PUT /admin/users/:userId/deactivate` – Deactivate a user (super administrator only)
+- `PUT /admin/users/:userId/reactivate` – Reactivate a user (super administrator only)
+- `GET /admin/books` – Retrieve the managed catalogue
+- `GET /admin/books/stats` – Book availability metrics
+- `GET /admin/printouts/stats` – Printout statistics
+- `GET /admin/reports` – Generate structured JSON reports
 
 ## Data Models
-
 ### User
 ```javascript
 {
-  name, email, password, googleId,
-  role: 'user' | 'admin',
+  name,
+  email,
+  password,
+  googleId,
+  role: 'user' | 'admin' | 'superadmin',
   borrowedBooks: [],
-  totalPrintoutSpent, totalPrintoutsCount,
-  isActive, createdAt, updatedAt
+  totalPrintoutSpent,
+  totalPrintoutsCount,
+  isActive,
+  createdAt,
+  updatedAt
 }
 ```
 
 ### Book
 ```javascript
 {
-  title, author, genre, publicationYear, isbn,
-  description, coverImage, location,
-  totalCopies, availableCopies, issuedCopies: [],
-  createdAt, updatedAt
+  title,
+  author,
+  genre,
+  publicationYear,
+  isbn,
+  description,
+  coverImage,
+  location,
+  totalCopies,
+  availableCopies,
+  issuedCopies: [],
+  createdAt,
+  updatedAt
 }
 ```
 
 ### Printout
 ```javascript
 {
-  userId, userName, documentName, fileUrl,
+  userId,
+  userName,
+  documentName,
+  fileUrl,
   colorMode: 'BW' | 'Color',
-  copies, totalPages, totalCost,
+  copies,
+  totalPages,
+  totalCost,
   paymentStatus: 'pending' | 'completed' | 'failed',
   paymentMethod: 'gpay' | 'credit_card' | 'debit_card',
   status: 'pending' | 'processing' | 'completed' | 'cancelled',
-  transactionId, createdAt, completedAt
+  transactionId,
+  createdAt,
+  completedAt
 }
 ```
 
-## Security Features
+## Security and Compliance
+- Passwords are hashed with bcrypt.
+- JWT-based session handling secures API access.
+- Role-aware middleware protects administrative operations.
+- File uploads are processed with Multer and stored securely.
 
-- Password hashing with bcrypt
-- JWT-based authentication
-- Protected routes with middleware
-- Admin-only operations validation
-- Secure payment integration
-
-## Future Enhancements
-
-- Email notifications for due dates and payment confirmations
-- Advanced analytics and reporting
-- Mobile app version
-- Integration with actual payment gateways (GPay, Razorpay)
-- Book recommendations engine
-- User reviews and ratings
-- Reservation system for unavailable books
-- Fine management system
+## Roadmap
+- Email notifications for due dates and payment confirmation
+- Enhanced analytics and visual reporting
+- Mobile-first experience
+- Native integration with third-party payment gateways
+- Recommendation engine, user reviews, and reservations
+- Automated fine calculation and settlement
 
 ## Troubleshooting
+### MongoDB Connectivity
+- Verify that MongoDB is running and accessible.
+- Confirm the `MONGODB_URI` value in the `.env` file.
+- Ensure network permissions allow database access.
 
-### MongoDB Connection Issues
-- Ensure MongoDB is running
-- Check MONGODB_URI in .env file
-- Verify network connectivity
+### Port Conflicts
+- Change the `PORT` value or release the conflicting process.
 
-### Port Already in Use
-- Change PORT in .env file
-- Or kill existing process on port 5000/3000
+### Cross-Origin Requests
+- Confirm that the frontend and backend origin values match.
+- Review the CORS configuration in `server/server.js`.
 
-### CORS Issues
-- Check CORS configuration in server.js
-- Ensure frontend and backend URLs match
-
-## License
-
-MIT License - feel free to use this project for educational and commercial purposes.
-
-## Support
-
-For issues, questions, or suggestions, please create an issue in the repository.
-
----
-
-**Happy Learning! 📚**
+## License and Support
+Distributed under the MIT License. For product questions or bug reports, open an issue in the repository.

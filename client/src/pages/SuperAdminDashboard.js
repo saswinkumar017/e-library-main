@@ -137,11 +137,10 @@ function SuperAdminDashboard() {
       <div className="container">
         <div className="superadmin-header">
           <div className="header-content">
-            <h1>👑 SuperAdmin Dashboard</h1>
-            <p>Complete system management and user role control</p>
+            <h1>Super Administrator Dashboard</h1>
+            <p>Complete system management and user role control.</p>
           </div>
           <div className="header-badge">
-            <span className="badge-icon">⚡</span>
             <span>Full Control</span>
           </div>
         </div>
@@ -153,25 +152,25 @@ function SuperAdminDashboard() {
             className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
-            📊 Overview
+            Overview
           </button>
           <button
             className={`nav-btn ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
-            👥 Regular Users
+            Regular Users
           </button>
           <button
             className={`nav-btn ${activeTab === 'admins' ? 'active' : ''}`}
             onClick={() => setActiveTab('admins')}
           >
-            ⚙️ Admin Users
+            Administrator Accounts
           </button>
           <button
             className={`nav-btn ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => setActiveTab('reports')}
           >
-            📋 Reports
+            Reports
           </button>
         </div>
 
@@ -180,10 +179,10 @@ function SuperAdminDashboard() {
           <div className="overview-section">
             {/* System Stats */}
             <div className="stats-card-group">
-              <h2>🔍 System Overview</h2>
+              <h2>System Overview</h2>
               <div className="stats-grid">
                 <div className="stat-card primary">
-                  <div className="stat-icon">👥</div>
+                  <div className="stat-icon">Users</div>
                   <div className="stat-content">
                     <div className="stat-value">{userStats?.totalUsers || 0}</div>
                     <div className="stat-label">Total Users</div>
@@ -191,7 +190,7 @@ function SuperAdminDashboard() {
                 </div>
 
                 <div className="stat-card secondary">
-                  <div className="stat-icon">👤</div>
+                  <div className="stat-icon">Members</div>
                   <div className="stat-content">
                     <div className="stat-value">{userStats?.regularUsers || 0}</div>
                     <div className="stat-label">Regular Users</div>
@@ -199,7 +198,7 @@ function SuperAdminDashboard() {
                 </div>
 
                 <div className="stat-card warning">
-                  <div className="stat-icon">⚙️</div>
+                  <div className="stat-icon">Administrators</div>
                   <div className="stat-content">
                     <div className="stat-value">{userStats?.adminUsers || 0}</div>
                     <div className="stat-label">Admin Users</div>
@@ -207,7 +206,7 @@ function SuperAdminDashboard() {
                 </div>
 
                 <div className="stat-card info">
-                  <div className="stat-icon">👑</div>
+                  <div className="stat-icon">Super Admin</div>
                   <div className="stat-content">
                     <div className="stat-value">1</div>
                     <div className="stat-label">You (SuperAdmin)</div>
@@ -218,10 +217,10 @@ function SuperAdminDashboard() {
 
             {/* Book Stats */}
             <div className="stats-card-group">
-              <h2>📚 Book Inventory</h2>
+              <h2>Book Inventory</h2>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-icon">📖</div>
+                  <div className="stat-icon">Catalogue</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.totalBooks || 0}</div>
                     <div className="stat-label">Total Books</div>
@@ -229,7 +228,7 @@ function SuperAdminDashboard() {
                 </div>
 
                 <div className="stat-card success">
-                  <div className="stat-icon">✅</div>
+                  <div className="stat-icon">Available</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.availableCopies || 0}</div>
                     <div className="stat-label">Available</div>
@@ -237,7 +236,7 @@ function SuperAdminDashboard() {
                 </div>
 
                 <div className="stat-card danger">
-                  <div className="stat-icon">📤</div>
+                  <div className="stat-icon">Issued</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.issuedBooks || 0}</div>
                     <div className="stat-label">Issued</div>
@@ -245,7 +244,7 @@ function SuperAdminDashboard() {
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">⏰</div>
+                  <div className="stat-icon">Overdue</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.borrowReturnStats?.overdue || 0}</div>
                     <div className="stat-label">Overdue</div>
@@ -257,10 +256,10 @@ function SuperAdminDashboard() {
             {/* Printout Stats */}
             {printoutStats && (
               <div className="stats-card-group">
-                <h2>🖨️ Printout Statistics</h2>
+                <h2>Printout Statistics</h2>
                 <div className="stats-grid">
                   <div className="stat-card">
-                    <div className="stat-icon">📋</div>
+                    <div className="stat-icon">Printouts</div>
                     <div className="stat-content">
                       <div className="stat-value">{printoutStats?.totalPrintouts || 0}</div>
                       <div className="stat-label">Total Printouts</div>
@@ -269,7 +268,7 @@ function SuperAdminDashboard() {
 
                   {printoutStats?.stats?.revenue?.[0] && (
                     <div className="stat-card success">
-                      <div className="stat-icon">💰</div>
+                      <div className="stat-icon">Revenue</div>
                       <div className="stat-content">
                         <div className="stat-value">₹{printoutStats.stats.revenue[0].total}</div>
                         <div className="stat-label">Revenue</div>
@@ -286,7 +285,7 @@ function SuperAdminDashboard() {
         {activeTab === 'users' && (
           <div className="users-section">
             <div className="section-header">
-              <h2>👥 Regular Users Management</h2>
+              <h2>Regular Users Management</h2>
               <div className="search-box">
                 <input
                   type="text"
@@ -334,21 +333,21 @@ function SuperAdminDashboard() {
                         className="btn btn-primary"
                         onClick={() => handlePromoteUser(user._id, user.name)}
                       >
-                        ⬆️ Promote to Admin
+                        Promote to Administrator
                       </button>
                       {user.isActive ? (
                         <button
                           className="btn btn-danger"
                           onClick={() => handleDeactivateUser(user._id, user.name)}
                         >
-                          🔒 Deactivate
+                          Deactivate
                         </button>
                       ) : (
                         <button
                           className="btn btn-success"
                           onClick={() => handleReactivateUser(user._id, user.name)}
                         >
-                          🔓 Reactivate
+                          Reactivate
                         </button>
                       )}
                     </div>
@@ -363,7 +362,7 @@ function SuperAdminDashboard() {
         {activeTab === 'admins' && (
           <div className="admins-section">
             <div className="section-header">
-              <h2>⚙️ Admin Users Management</h2>
+              <h2>Administrator Management</h2>
               <div className="search-box">
                 <input
                   type="text"
@@ -385,7 +384,7 @@ function SuperAdminDashboard() {
                   <div key={admin._id} className="admin-card">
                     <div className="admin-header">
                       <div className="admin-info">
-                        <h3>⚙️ {admin.name}</h3>
+                        <h3>{admin.name}</h3>
                         <p className="admin-email">{admin.email}</p>
                         <span className="admin-badge">Admin</span>
                       </div>
@@ -409,7 +408,7 @@ function SuperAdminDashboard() {
                         className="btn btn-warning"
                         onClick={() => handleDemoteAdmin(admin._id, admin.name)}
                       >
-                        ⬇️ Demote to User
+                        Demote to Member
                       </button>
                     </div>
                   </div>
@@ -422,10 +421,10 @@ function SuperAdminDashboard() {
         {/* Reports Tab */}
         {activeTab === 'reports' && (
           <div className="reports-section">
-            <h2>📋 System Reports</h2>
+            <h2>System Reports</h2>
             <div className="reports-grid">
               <div className="report-card">
-                <div className="report-icon">👥</div>
+                <div className="report-icon">Users</div>
                 <h3>User Report</h3>
                 <p>Export all users, roles, and activity data</p>
                 <button
@@ -437,7 +436,7 @@ function SuperAdminDashboard() {
               </div>
 
               <div className="report-card">
-                <div className="report-icon">📚</div>
+                <div className="report-icon">Books</div>
                 <h3>Book Report</h3>
                 <p>Export inventory, borrowing, and returns data</p>
                 <button
@@ -449,7 +448,7 @@ function SuperAdminDashboard() {
               </div>
 
               <div className="report-card">
-                <div className="report-icon">🖨️</div>
+                <div className="report-icon">Printouts</div>
                 <h3>Printout Report</h3>
                 <p>Export printout requests and payment data</p>
                 <button
@@ -461,7 +460,7 @@ function SuperAdminDashboard() {
               </div>
 
               <div className="report-card">
-                <div className="report-icon">📊</div>
+                <div className="report-icon">Summary</div>
                 <h3>Complete Report</h3>
                 <p>Export all system data in one comprehensive file</p>
                 <button
