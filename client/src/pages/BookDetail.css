@@ -78,6 +78,16 @@
   color: #6b7280;
 }
 
+.meta-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.meta-link:hover {
+  text-decoration: underline;
+}
+
 .availability-section {
   margin-bottom: 30px;
 }
@@ -137,6 +147,34 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
   margin-top: 30px;
+}
+
+.borrow-status {
+  margin-top: 15px;
+}
+
+.borrow-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: #eef2ff;
+  color: #4338ca;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.return-hint {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background-color: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  color: #92400e;
+  font-size: 14px;
 }
 
 .issued-history {

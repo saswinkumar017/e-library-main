@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/', bookController.getBooks);
 
 router.post('/borrow', authMiddleware, bookController.borrowBook);
+router.post('/renew', authMiddleware, bookController.renewBook);
 router.post('/return', authMiddleware, bookController.returnBook);
 
 router.post('/', adminMiddleware, bookController.createBook);
