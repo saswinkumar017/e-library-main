@@ -35,7 +35,7 @@ export const authAPI = {
   register: (name, email, password) =>
     api.post('/auth/register', { name, email, password }),
   login: (email, password) =>
-    api.post('/api/auth/login', { email, password }),
+    api.post('/auth/login', { email, password }),
   googleLogin: (googleId, name, email, profilePicture) =>
     api.post('/auth/google-login', { googleId, name, email, profilePicture }),
   getProfile: () =>
