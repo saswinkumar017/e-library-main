@@ -54,7 +54,7 @@ function ELibrary() {
   const handleBorrow = async (bookId) => {
     try {
       await bookAPI.borrowBook(bookId);
-      alert('Book borrowed successfully! Due date is 14 days from today.');
+      alert('Book borrowed successfully. The due date is 14 days from today.');
       fetchBooks();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to borrow book');
@@ -77,8 +77,8 @@ function ELibrary() {
     <div className="e-library">
       <div className="container">
         <div className="library-header">
-          <h1>📚 E-Library</h1>
-          <p>Explore our collection of academic resources</p>
+          <h1>E-Library</h1>
+          <p>Explore our collection of academic resources.</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -130,7 +130,7 @@ function ELibrary() {
                   {book.coverImage ? (
                     <img src={book.coverImage} alt={book.title} />
                   ) : (
-                    <div className="no-image">📖</div>
+                    <div className="no-image">No Cover</div>
                   )}
                   <div className="availability-badge">
                     {book.availableCopies > 0 ? (

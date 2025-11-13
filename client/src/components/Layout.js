@@ -6,9 +6,9 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
   const navigate = useNavigate();
 
   const roleMeta = {
-    superadmin: { icon: '👑', label: 'Super Admin' },
-    admin: { icon: '⚙️', label: 'Administrator' },
-    user: { icon: '📖', label: 'Member' }
+    superadmin: { label: 'Super Administrator' },
+    admin: { label: 'Administrator' },
+    user: { label: 'Member' }
   };
 
   const activeRole = userRole ? roleMeta[userRole] : null;
@@ -26,7 +26,7 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
     if (userRole === 'superadmin') {
       return (
         <Link to="/superadmin" className="nav-link nav-link-superadmin">
-          👑 Super Admin Suite
+          Super Administrator Console
         </Link>
       );
     }
@@ -34,7 +34,7 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
     if (userRole === 'admin') {
       return (
         <Link to="/admin" className="nav-link nav-link-admin">
-          ⚙️ Admin Dashboard
+          Administrator Dashboard
         </Link>
       );
     }
@@ -88,10 +88,7 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
                     <span className="user-name">{user?.name}</span>
                     {activeRole && (
                       <span className={`user-role-chip role-${userRole}`}>
-                        <span className="role-icon" aria-hidden="true">
-                          {activeRole.icon}
-                        </span>
-                        <span>{activeRole.label}</span>
+                        {activeRole.label}
                       </span>
                     )}
                   </div>
@@ -121,7 +118,7 @@ function Layout({ isLoggedIn, userRole, user, onLogout, children }) {
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <span className="footer-logo" aria-hidden="true">📚</span>
+            <span className="footer-logo" aria-hidden="true">EL</span>
             <div>
               <h4>E-Library System</h4>
               <p>Empowering academic communities through streamlined access to knowledge.</p>

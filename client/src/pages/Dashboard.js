@@ -41,7 +41,7 @@ function Dashboard({ user }) {
           <div className="welcome-card">
             <div className="welcome-header">
               <span className="welcome-chip">Your personalized workspace</span>
-              <h1>Welcome back, {firstName}!</h1>
+              <h1>Welcome back, {firstName}.</h1>
               <p>
                 Manage your reading journey, monitor borrowing activity, and stay on top of printout
                 requests with our refreshed experience.
@@ -81,7 +81,7 @@ function Dashboard({ user }) {
 
         <section className="dashboard-grid">
           <div className="dashboard-card">
-            <div className="card-icon">📚</div>
+            <div className="card-icon">Library</div>
             <div className="card-content">
               <h3>Digital Library</h3>
               <p>Search, filter, and reserve titles from our curated academic catalogue.</p>
@@ -92,7 +92,7 @@ function Dashboard({ user }) {
           </div>
 
           <div className="dashboard-card">
-            <div className="card-icon">🖨️</div>
+            <div className="card-icon">Print</div>
             <div className="card-content">
               <h3>Printout Studio</h3>
               <p>Upload study materials, configure preferences, and monitor fulfilment.</p>
@@ -103,7 +103,7 @@ function Dashboard({ user }) {
           </div>
 
           <div className="dashboard-card">
-            <div className="card-icon">🎯</div>
+            <div className="card-icon">Profile</div>
             <div className="card-content">
               <h3>Profile &amp; Activity</h3>
               <p>Review personal details, borrowing history, and upcoming due dates.</p>
@@ -124,17 +124,17 @@ function Dashboard({ user }) {
             </div>
             <div className="stats-grid">
               <div className="stat-card">
-                <span className="stat-icon">📘</span>
+                <span className="stat-icon">Books</span>
                 <div className="stat-number">{stats.borrowedBooks?.length || 0}</div>
                 <div className="stat-label">Books Borrowed</div>
               </div>
               <div className="stat-card">
-                <span className="stat-icon">🖨️</span>
+                <span className="stat-icon">Printouts</span>
                 <div className="stat-number">{stats.totalPrintoutsCount || 0}</div>
                 <div className="stat-label">Printouts Completed</div>
               </div>
               <div className="stat-card">
-                <span className="stat-icon">💳</span>
+                <span className="stat-icon">Spending</span>
                 <div className="stat-number">₹{stats.totalPrintoutSpent || 0}</div>
                 <div className="stat-label">Spent on Printing</div>
               </div>
@@ -144,7 +144,7 @@ function Dashboard({ user }) {
 
         <section className="info-section">
           <div className="info-card">
-            <div className="info-icon">📖</div>
+            <div className="info-icon">Library</div>
             <div>
               <h3>E-Library Essentials</h3>
               <p>
@@ -155,7 +155,7 @@ function Dashboard({ user }) {
           </div>
 
           <div className="info-card">
-            <div className="info-icon">🧾</div>
+            <div className="info-icon">Printouts</div>
             <div>
               <h3>Streamlined Printouts</h3>
               <p>
@@ -166,7 +166,7 @@ function Dashboard({ user }) {
           </div>
 
           <div className="info-card">
-            <div className="info-icon">💡</div>
+            <div className="info-icon">Insights</div>
             <div>
               <h3>Working Smarter</h3>
               <ul className="tips-list">

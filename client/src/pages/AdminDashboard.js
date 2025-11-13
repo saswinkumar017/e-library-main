@@ -183,8 +183,8 @@ function AdminDashboard() {
     <div className="admin-dashboard">
       <div className="container">
         <div className="admin-header">
-          <h1>⚙️ Admin Dashboard</h1>
-          <p>Manage books, receive printout requests, and monitor user activities</p>
+          <h1>Administrator Dashboard</h1>
+          <p>Manage books, receive printout requests, and monitor user activities.</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -217,7 +217,7 @@ function AdminDashboard() {
               <h2>User Statistics</h2>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-icon">👥</div>
+                  <div className="stat-icon">Users</div>
                   <div className="stat-content">
                     <div className="stat-value">{userStats?.totalUsers || 0}</div>
                     <div className="stat-label">Total Users</div>
@@ -225,7 +225,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">👨‍💼</div>
+                  <div className="stat-icon">Administrators</div>
                   <div className="stat-content">
                     <div className="stat-value">{userStats?.adminUsers || 0}</div>
                     <div className="stat-label">Admin Users</div>
@@ -233,7 +233,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">👤</div>
+                  <div className="stat-icon">Members</div>
                   <div className="stat-content">
                     <div className="stat-value">{userStats?.regularUsers || 0}</div>
                     <div className="stat-label">Regular Users</div>
@@ -247,7 +247,7 @@ function AdminDashboard() {
               <h2>Book Statistics</h2>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-icon">📚</div>
+                  <div className="stat-icon">Catalogue</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.totalBooks || 0}</div>
                     <div className="stat-label">Total Books</div>
@@ -255,7 +255,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">✅</div>
+                  <div className="stat-icon">Available</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.availableCopies || 0}</div>
                     <div className="stat-label">Available Copies</div>
@@ -263,7 +263,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">📤</div>
+                  <div className="stat-icon">Issued</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.issuedBooks || 0}</div>
                     <div className="stat-label">Issued Books</div>
@@ -271,7 +271,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">⏰</div>
+                  <div className="stat-icon">Overdue</div>
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.borrowReturnStats?.overdue || 0}</div>
                     <div className="stat-label">Overdue Books</div>
@@ -285,7 +285,7 @@ function AdminDashboard() {
               <h2>Printout Statistics</h2>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-icon">🖨️</div>
+                  <div className="stat-icon">Printouts</div>
                   <div className="stat-content">
                     <div className="stat-value">{printoutStats?.totalPrintouts || 0}</div>
                     <div className="stat-label">Total Printouts</div>
@@ -293,7 +293,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">💰</div>
+                  <div className="stat-icon">Revenue</div>
                   <div className="stat-content">
                     <div className="stat-value">
                       ₹{printoutStats?.stats?.[0]?.revenue?.[0]?.total || 0}
@@ -338,7 +338,7 @@ function AdminDashboard() {
                 <div>
                   <h2>All Users</h2>
                   <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
-                    ℹ️ Role management (promote/demote) is available only to SuperAdmin
+                    Note: Role management (promote/demote) is available only to the Super Administrator.
                   </p>
                 </div>
               </div>
@@ -379,12 +379,12 @@ function AdminDashboard() {
                       </div>
 
                       <div className="user-actions">
-                        <span className="info-text">Role: {user.role === 'user' ? '📖 Regular User' : '⚙️ Admin'}</span>
+                        <span className="info-text">Role: {user.role === 'user' ? 'Regular User' : 'Administrator'}</span>
                         <button
                           onClick={() => handleDeactivateUser(user._id)}
                           className="btn btn-danger btn-small"
                           disabled={user.role === 'admin'}
-                          title={user.role === 'admin' ? 'Contact SuperAdmin to manage admin users' : 'Deactivate this user'}
+                          title={user.role === 'admin' ? 'Contact the Super Administrator to manage administrator accounts' : 'Deactivate this user'}
                         >
                           Deactivate
                         </button>
@@ -406,7 +406,7 @@ function AdminDashboard() {
                   onClick={() => setShowAddBookForm(!showAddBookForm)}
                   className="btn btn-primary"
                 >
-                  {showAddBookForm ? 'Cancel' : '➕ Add New Book'}
+                  {showAddBookForm ? 'Cancel' : 'Add New Book'}
                 </button>
               </div>
 

@@ -90,28 +90,28 @@ function Profile() {
 
         <div className="profile-stats-grid">
           <div className="profile-stat-card">
-            <div className="profile-stat-icon">📚</div>
+            <div className="profile-stat-icon">Catalogue</div>
             <div>
               <div className="profile-stat-value">{totalBorrowed}</div>
               <div className="profile-stat-label">Books Borrowed</div>
             </div>
           </div>
           <div className="profile-stat-card">
-            <div className="profile-stat-icon">⏳</div>
+            <div className="profile-stat-icon">In Progress</div>
             <div>
               <div className="profile-stat-value">{activeBorrowed}</div>
               <div className="profile-stat-label">Active Borrowings</div>
             </div>
           </div>
           <div className="profile-stat-card">
-            <div className="profile-stat-icon">⏰</div>
+            <div className="profile-stat-icon">Overdue</div>
             <div>
               <div className="profile-stat-value">{overdueBorrowed}</div>
               <div className="profile-stat-label">Overdue Books</div>
             </div>
           </div>
           <div className="profile-stat-card">
-            <div className="profile-stat-icon">🖨️</div>
+            <div className="profile-stat-icon">Printouts</div>
             <div>
               <div className="profile-stat-value">{profile.totalPrintoutsCount || 0}</div>
               <div className="profile-stat-label">Printouts Completed</div>
@@ -193,7 +193,7 @@ function Profile() {
 
           {totalBorrowed === 0 ? (
             <div className="profile-empty-state">
-              <div className="empty-icon">📚</div>
+              <div className="empty-icon">Library</div>
               <p>You haven't borrowed any books yet.</p>
             </div>
           ) : (
