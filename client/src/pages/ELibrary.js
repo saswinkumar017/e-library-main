@@ -12,6 +12,7 @@ function ELibrary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const currentUserId = localStorage.getItem('userId');
 
   const genres = [
     'Fiction',
@@ -53,8 +54,9 @@ function ELibrary() {
 
   const handleBorrow = async (bookId) => {
     try {
-      await bookAPI.borrowBook(bookId);
-      alert('Book borrowed successfully! Due date is 14 days from today.');
+      const response = await bookAPI.borrowBook(bookId);
+      const message = response.data?.message || 'Book borrowed successfully.';
+      alert(message);
       fetchBooks();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to borrow book');
@@ -124,72 +126,128 @@ function ELibrary() {
           </div>
         ) : (
           <div className="books-grid">
-            {filteredBooks.map((book) => (
-              <div key={book._id} className="book-card">
-                <div className="book-image">
-                  {book.coverImage ? (
-                    <img src={book.coverImage} alt={book.title} />
-                  ) : (
-                    <div className="no-image">📖</div>
-                  )}
-                  <div className="availability-badge">
-                    {book.availableCopies > 0 ? (
-                      <span className="available">Available</span>
+            {filteredBooks.map((book) => {
+              const isDigital = book.category === 'online';
+              const issuedCopies = Array.isArray(book.issuedCopies) ? book.issuedCopies : [];
+              const activeIssued = issuedCopies.filter(
+                (copy) => !(copy?.isReturned || copy?.status === 'returned')
+              );
+              const activeIssuedCount = activeIssued.length;
+              const borrowedByUser = Boolean(
+                currentUserId &&
+                  activeIssued.some((copy) => {
+                    const copyUserId = copy?.userId?._id || copy?.userId;
+                    return copyUserId && copyUserId.toString() === currentUserId;
+                  })
+              );
+
+              const availabilityState = isDigital
+                ? 'digital'
+                : (book.availableCopies || 0) > 0
+                ? 'available'
+                : 'issued';
+
+              const availabilityLabel =
+                availabilityState === 'digital'
+                  ? 'Digital'
+                  : availabilityState === 'available'
+                  ? 'Available'
+                  : 'Issued';
+
+              const borrowDisabled = (!isDigital && (book.availableCopies || 0) === 0) || borrowedByUser;
+              const borrowButtonLabel = borrowedByUser
+                ? isDigital
+                  ? 'Access Active'
+                  : 'Already Borrowed'
+                : isDigital
+                ? 'Access Book'
+                : (book.availableCopies || 0) > 0
+                ? 'Borrow'
+                : 'Not Available';
+
+              const locationLabel = isDigital ? 'Digital Library' : book.location;
+              const accessLabel = isDigital ? 'Unlimited' : `${book.availableCopies ?? 0}/${book.totalCopies ?? 0}`;
+              const renewalLabel = `${book.renewalPeriodDays || 15} days`;
+              const firstActiveBorrow = !isDigital ? activeIssued[0] : null;
+
+              return (
+                <div key={book._id} className="book-card">
+                  <div className="book-image">
+                    {book.coverImage ? (
+                      <img src={book.coverImage} alt={book.title} />
                     ) : (
-                      <span className="issued">Issued</span>
+                      <div className="no-image">📖</div>
                     )}
+                    <div className="availability-badge">
+                      <span className={availabilityState}>{availabilityLabel}</span>
+                    </div>
+                  </div>
+
+                  <div className="book-content">
+                    <h3 className="book-title">{book.title}</h3>
+                    <p className="book-author">by {book.author}</p>
+                    <p className="book-genre">
+                      {book.genre} • {isDigital ? 'Online' : 'Offline'}
+                    </p>
+
+                    <div className="book-details">
+                      <div className="detail-item">
+                        <span className="label">Category:</span>
+                        <span className="value">{isDigital ? 'Online (Digital)' : 'Offline (Physical)'}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">{isDigital ? 'Access:' : 'Available:'}</span>
+                        <span className="value">{accessLabel}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">{isDigital ? 'Renewal:' : 'Location:'}</span>
+                        <span className="value">{isDigital ? renewalLabel : locationLabel}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">{isDigital ? 'Active Users:' : 'Year:'}</span>
+                        <span className="value">{isDigital ? activeIssuedCount : book.publicationYear}</span>
+                      </div>
+                    </div>
+
+                    {isDigital && (
+                      <div className="digital-info">
+                        Renew access every {book.renewalPeriodDays || 15} days to keep reading online.
+                      </div>
+                    )}
+
+                    {!isDigital && firstActiveBorrow && (
+                      <div className="issued-info">
+                        <p className="borrowed-by">
+                          <strong>Borrowed by:</strong> {firstActiveBorrow.borrowerName}
+                        </p>
+                        <p className="due-date">
+                          <strong>Due Date:</strong>{' '}
+                          {firstActiveBorrow.dueDate
+                            ? new Date(firstActiveBorrow.dueDate).toLocaleDateString()
+                            : '—'}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="book-actions">
+                      <button
+                        onClick={() => handleViewDetails(book._id)}
+                        className="btn btn-secondary btn-small"
+                      >
+                        Details
+                      </button>
+                      <button
+                        onClick={() => handleBorrow(book._id)}
+                        className="btn btn-primary btn-small"
+                        disabled={borrowDisabled}
+                      >
+                        {borrowButtonLabel}
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <div className="book-content">
-                  <h3 className="book-title">{book.title}</h3>
-                  <p className="book-author">by {book.author}</p>
-                  <p className="book-genre">{book.genre}</p>
-
-                  <div className="book-details">
-                    <div className="detail-item">
-                      <span className="label">Location:</span>
-                      <span className="value">{book.location}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Available:</span>
-                      <span className="value">{book.availableCopies}/{book.totalCopies}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Year:</span>
-                      <span className="value">{book.publicationYear}</span>
-                    </div>
-                  </div>
-
-                  {book.issuedCopies.length > 0 && (
-                    <div className="issued-info">
-                      <p className="borrowed-by">
-                        <strong>Borrowed by:</strong> {book.issuedCopies[0]?.borrowerName}
-                      </p>
-                      <p className="due-date">
-                        <strong>Due Date:</strong> {new Date(book.issuedCopies[0]?.dueDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="book-actions">
-                    <button
-                      onClick={() => handleViewDetails(book._id)}
-                      className="btn btn-secondary btn-small"
-                    >
-                      Details
-                    </button>
-                    <button
-                      onClick={() => handleBorrow(book._id)}
-                      className="btn btn-primary btn-small"
-                      disabled={book.availableCopies === 0}
-                    >
-                      {book.availableCopies > 0 ? 'Borrow' : 'Not Available'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

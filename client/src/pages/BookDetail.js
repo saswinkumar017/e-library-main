@@ -9,6 +9,7 @@ function BookDetail() {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const currentUserId = localStorage.getItem('userId');
 
   useEffect(() => {
     fetchBookDetails();
@@ -30,8 +31,9 @@ function BookDetail() {
 
   const handleBorrow = async () => {
     try {
-      await bookAPI.borrowBook(id);
-      alert('Book borrowed successfully! Due date is 14 days from today.');
+      const response = await bookAPI.borrowBook(id);
+      const message = response.data?.message || 'Book borrowed successfully.';
+      alert(message);
       fetchBookDetails();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to borrow book');
@@ -40,8 +42,9 @@ function BookDetail() {
 
   const handleReturn = async () => {
     try {
-      await bookAPI.returnBook(id);
-      alert('Book returned successfully');
+      const response = await bookAPI.returnBook(id);
+      const message = response.data?.message || 'Return processed successfully.';
+      alert(message);
       fetchBookDetails();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to return book');
@@ -67,9 +70,38 @@ function BookDetail() {
     );
   }
 
-  const isBorrowedByUser = book.issuedCopies.some(
-    copy => !copy.isReturned && copy.userId === localStorage.getItem('userId')
+  const isDigital = book.category === 'online';
+  const issuedCopies = Array.isArray(book.issuedCopies) ? book.issuedCopies : [];
+  const activeIssued = issuedCopies.filter(
+    copy => !(copy?.isReturned || copy?.status === 'returned')
   );
+  const activeIssuedCount = activeIssued.length;
+  const userBorrowRecord = currentUserId
+    ? activeIssued.find(copy => {
+        const copyUserId = copy?.userId?._id || copy?.userId;
+        return copyUserId && copyUserId.toString() === currentUserId;
+      })
+    : null;
+  const isBorrowedByUser = Boolean(userBorrowRecord);
+  const isPendingReturn = userBorrowRecord?.status === 'pending_return';
+
+  const borrowDisabled = (!isDigital && (book.availableCopies || 0) === 0) || isBorrowedByUser || isPendingReturn;
+  const borrowLabel = isBorrowedByUser
+    ? isDigital
+      ? 'Access Active'
+      : 'Already Borrowed'
+    : isDigital
+    ? 'Access Book'
+    : (book.availableCopies || 0) > 0
+    ? 'Borrow Book'
+    : 'Not Available';
+
+  const returnDisabled = isPendingReturn;
+  const returnLabel = isDigital
+    ? 'Return Access'
+    : isPendingReturn
+    ? 'Pending Verification'
+    : 'Request Return';
 
   return (
     <div className="book-detail">
@@ -116,19 +148,25 @@ function BookDetail() {
               <h3>Availability</h3>
               <div className="availability-stats">
                 <div className="stat">
-                  <span className="stat-label">Total Copies:</span>
-                  <span className="stat-value">{book.totalCopies}</span>
+                  <span className="stat-label">Category:</span>
+                  <span className="stat-value">{isDigital ? 'Online (Digital)' : 'Offline (Physical)'}</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Available:</span>
+                  <span className="stat-label">{isDigital ? 'Access:' : 'Total Copies:'}</span>
+                  <span className="stat-value">{isDigital ? 'Unlimited' : book.totalCopies}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">{isDigital ? 'Active Users:' : 'Available:'}</span>
                   <span className="stat-value" style={{ color: '#16a34a' }}>
-                    {book.availableCopies}
+                    {isDigital ? activeIssuedCount : book.availableCopies}
                   </span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Issued:</span>
+                  <span className="stat-label">{isDigital ? 'Renewal Period:' : 'Issued:'}</span>
                   <span className="stat-value" style={{ color: '#dc2626' }}>
-                    {book.totalCopies - book.availableCopies}
+                    {isDigital
+                      ? `${book.renewalPeriodDays || 15} days`
+                      : Math.max(0, (book.totalCopies || 0) - (book.availableCopies || 0))}
                   </span>
                 </div>
               </div>
@@ -141,42 +179,70 @@ function BookDetail() {
               </div>
             )}
 
+            {isDigital && (
+              <div className="digital-resource">
+                <h3>Digital Resource</h3>
+                {isBorrowedByUser && book.googleDriveLink ? (
+                  <a
+                    href={book.googleDriveLink}
+                    className="digital-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open Google Drive Link ↗
+                  </a>
+                ) : (
+                  <p>Borrow this digital title to unlock the Google Drive resource.</p>
+                )}
+              </div>
+            )}
+
             <div className="actions">
               <button
                 onClick={handleBorrow}
                 className="btn btn-primary btn-large"
-                disabled={book.availableCopies === 0 || isBorrowedByUser}
+                disabled={borrowDisabled}
               >
-                {isBorrowedByUser ? 'Already Borrowed' : book.availableCopies > 0 ? 'Borrow Book' : 'Not Available'}
+                {borrowLabel}
               </button>
 
               {isBorrowedByUser && (
                 <button
-                  onClick={handleReturn}
-                  className="btn btn-success btn-large"
+                  onClick={() => {
+                    if (!returnDisabled) {
+                      handleReturn();
+                    }
+                  }}
+                  className={`btn ${isDigital ? 'btn-secondary' : 'btn-success'} btn-large`}
+                  disabled={returnDisabled}
                 >
-                  Return Book
+                  {returnLabel}
                 </button>
               )}
             </div>
+
+            {isPendingReturn && !isDigital && (
+              <p className="return-note">Return request submitted. Awaiting admin verification.</p>
+            )}
           </div>
         </div>
 
-        {book.issuedCopies.length > 0 && (
+        {activeIssuedCount > 0 && (
           <div className="issued-history">
-            <h3>Current Borrowers</h3>
+            <h3>{isDigital ? 'Active Readers' : 'Current Borrowers'}</h3>
             <div className="issue-list">
-              {book.issuedCopies
-                .filter(copy => !copy.isReturned)
-                .map((copy, index) => (
-                  <div key={index} className="issue-item">
-                    <div className="issue-info">
-                      <p><strong>Borrower:</strong> {copy.borrowerName}</p>
-                      <p><strong>Issued Date:</strong> {new Date(copy.issueDate).toLocaleDateString()}</p>
-                      <p><strong>Due Date:</strong> {new Date(copy.dueDate).toLocaleDateString()}</p>
-                    </div>
+              {activeIssued.map((copy, index) => (
+                <div key={index} className="issue-item">
+                  <div className="issue-info">
+                    <p><strong>{isDigital ? 'Reader' : 'Borrower'}:</strong> {copy.borrowerName}</p>
+                    <p><strong>Issued Date:</strong> {copy.issueDate ? new Date(copy.issueDate).toLocaleDateString() : '—'}</p>
+                    <p><strong>{isDigital ? 'Renewal Due:' : 'Due Date:'}</strong> {copy.dueDate ? new Date(copy.dueDate).toLocaleDateString() : '—'}</p>
+                    {copy.status === 'pending_return' && !isDigital && (
+                      <span className="borrow-status pending">Pending Return Verification</span>
+                    )}
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           </div>
         )}

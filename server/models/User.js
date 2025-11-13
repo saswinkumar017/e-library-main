@@ -1,6 +1,53 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const renewalEventSchema = new mongoose.Schema(
+  {
+    renewedAt: {
+      type: Date,
+      default: Date.now
+    },
+    dueDate: {
+      type: Date,
+      required: true
+    }
+  },
+  { _id: false }
+);
+
+const borrowedBookSchema = new mongoose.Schema({
+  issuedCopyId: {
+    type: mongoose.Schema.Types.ObjectId
+  },
+  bookId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Book'
+  },
+  bookTitle: String,
+  category: {
+    type: String,
+    enum: ['offline', 'online'],
+    default: 'offline'
+  },
+  accessLink: String,
+  borrowDate: Date,
+  dueDate: Date,
+  lastRenewedAt: Date,
+  renewals: [renewalEventSchema],
+  returnDate: Date,
+  isReturned: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['active', 'pending_return', 'returned', 'expired'],
+    default: 'active'
+  },
+  returnRequestedAt: Date,
+  returnVerifiedAt: Date
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -31,18 +78,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  borrowedBooks: [
-    {
-      bookId: mongoose.Schema.Types.ObjectId,
-      borrowDate: Date,
-      dueDate: Date,
-      returnDate: Date,
-      isReturned: {
-        type: Boolean,
-        default: false
-      }
-    }
-  ],
+  borrowedBooks: [borrowedBookSchema],
   totalPrintoutSpent: {
     type: Number,
     default: 0
@@ -62,11 +98,15 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password')) {
+    this.updatedAt = new Date();
+    return next();
+  }
   
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    this.updatedAt = new Date();
     next();
   } catch (error) {
     next(error);

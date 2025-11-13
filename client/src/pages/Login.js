@@ -21,6 +21,7 @@ function Login({ setIsLoggedIn, setUserRole, setUser }) {
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userId', user.id || user._id);
 
       setIsLoggedIn(true);
       setUserRole(user.role);

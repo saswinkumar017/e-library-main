@@ -8,6 +8,7 @@ function Profile() {
   const [error, setError] = useState('');
   const [actionFeedback, setActionFeedback] = useState(null);
   const [processingBookId, setProcessingBookId] = useState(null);
+  const [processingAction, setProcessingAction] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -45,11 +46,16 @@ function Profile() {
     }
 
     setProcessingBookId(targetBookId);
+    setProcessingAction('return');
     setActionFeedback(null);
 
     try {
-      await bookAPI.returnBook(targetBookId);
+      const response = await bookAPI.returnBook(targetBookId);
       const now = new Date().toISOString();
+      const isDigitalBorrow = borrowEntry?.category === 'online';
+      const feedbackMessage = response.data?.message || (isDigitalBorrow
+        ? 'Digital access revoked successfully.'
+        : 'Return request submitted. Awaiting admin verification.');
 
       setProfile(prevProfile => {
         if (!prevProfile) {
@@ -60,10 +66,21 @@ function Profile() {
           ? prevProfile.borrowedBooks.map(entry => {
               const entryBookId = resolveBookId(entry);
               if (entryBookId === targetBookId) {
+                if (isDigitalBorrow) {
+                  return {
+                    ...entry,
+                    isReturned: true,
+                    status: 'returned',
+                    returnDate: now,
+                    returnVerifiedAt: now,
+                    accessLink: undefined
+                  };
+                }
+
                 return {
                   ...entry,
-                  isReturned: true,
-                  returnDate: now
+                  status: 'pending_return',
+                  returnRequestedAt: now
                 };
               }
               return entry;
@@ -78,7 +95,7 @@ function Profile() {
 
       setActionFeedback({
         type: 'success',
-        message: 'Book returned successfully.'
+        message: feedbackMessage
       });
     } catch (err) {
       setActionFeedback({
@@ -87,6 +104,72 @@ function Profile() {
       });
     } finally {
       setProcessingBookId(null);
+      setProcessingAction(null);
+    }
+  };
+
+  const handleRenew = async (borrowEntry) => {
+    const targetBookId = resolveBookId(borrowEntry);
+
+    if (!targetBookId) {
+      setActionFeedback({
+        type: 'error',
+        message: 'Book information is unavailable for this record.'
+      });
+      return;
+    }
+
+    setProcessingBookId(targetBookId);
+    setProcessingAction('renew');
+    setActionFeedback(null);
+
+    try {
+      const response = await bookAPI.renewBook(targetBookId);
+      const now = new Date().toISOString();
+      const renewedDueDate = response.data?.dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString();
+
+      setProfile(prevProfile => {
+        if (!prevProfile) {
+          return prevProfile;
+        }
+
+        const updatedBorrowedBooks = Array.isArray(prevProfile.borrowedBooks)
+          ? prevProfile.borrowedBooks.map(entry => {
+              const entryBookId = resolveBookId(entry);
+              if (entryBookId === targetBookId) {
+                const updatedRenewals = Array.isArray(entry.renewals) ? [...entry.renewals] : [];
+                updatedRenewals.push({ renewedAt: now, dueDate: renewedDueDate });
+
+                return {
+                  ...entry,
+                  dueDate: renewedDueDate,
+                  lastRenewedAt: now,
+                  renewals: updatedRenewals,
+                  status: 'active'
+                };
+              }
+              return entry;
+            })
+          : [];
+
+        return {
+          ...prevProfile,
+          borrowedBooks: updatedBorrowedBooks
+        };
+      });
+
+      setActionFeedback({
+        type: 'success',
+        message: response.data?.message || 'Digital access renewed successfully.'
+      });
+    } catch (err) {
+      setActionFeedback({
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to renew access. Please try again.'
+      });
+    } finally {
+      setProcessingBookId(null);
+      setProcessingAction(null);
     }
   };
 
@@ -284,59 +367,117 @@ function Profile() {
                 .slice()
                 .reverse()
                 .map((borrow, index) => {
+                  const isDigitalBorrow = borrow.category === 'online';
+                  const isReturned = Boolean(borrow.isReturned || borrow.status === 'returned');
+                  const isPendingReturn = borrow.status === 'pending_return';
                   const isOverdue =
-                    !borrow.isReturned &&
+                    !isReturned && !isDigitalBorrow &&
                     borrow.dueDate &&
                     new Date(borrow.dueDate) < new Date();
-                  const status = borrow.isReturned
-                    ? 'returned'
-                    : isOverdue
-                    ? 'overdue'
-                    : 'active';
+                  const isRenewalDue =
+                    !isReturned && isDigitalBorrow &&
+                    borrow.dueDate &&
+                    new Date(borrow.dueDate) < new Date();
+
+                  let normalizedStatus = 'active';
+                  if (isReturned) {
+                    normalizedStatus = 'returned';
+                  } else if (isPendingReturn) {
+                    normalizedStatus = 'pending';
+                  } else if (isRenewalDue) {
+                    normalizedStatus = 'renewal';
+                  } else if (isOverdue) {
+                    normalizedStatus = 'overdue';
+                  }
+
+                  const statusLabelMap = {
+                    returned: 'Returned',
+                    pending: 'Pending Return',
+                    overdue: 'Overdue',
+                    active: isDigitalBorrow ? 'Access Active' : 'Borrowed',
+                    renewal: 'Renewal Due'
+                  };
+                  const statusLabel = statusLabelMap[normalizedStatus] || 'Borrowed';
+
                   const bookIdForAction = resolveBookId(borrow);
                   const isProcessing = Boolean(bookIdForAction && processingBookId === bookIdForAction);
+                  const isReturnProcessing = isProcessing && processingAction === 'return';
+                  const isRenewProcessing = isProcessing && processingAction === 'renew';
+                  const canRenew = isDigitalBorrow && !isReturned;
+                  const canReturn = !isReturned && Boolean(bookIdForAction);
+                  const renewalCount = Array.isArray(borrow.renewals) ? borrow.renewals.length : 0;
 
                   return (
                     <div
                       key={borrow._id || `${borrow.bookId}-${index}`}
-                      className="borrow-item"
+                      className={`borrow-item ${isPendingReturn ? 'borrow-item-pending' : ''}`}
                     >
                       <div className="borrow-item-main">
                         <h4>{borrow.bookTitle || 'Book'}</h4>
                         <div className="borrow-meta">
+                          <span>Category: {isDigitalBorrow ? 'Online (Digital)' : 'Offline (Physical)'}</span>
                           <span>Borrowed: {formatDate(borrow.borrowDate)}</span>
-                          <span>Due: {formatDate(borrow.dueDate)}</span>
-                          <span>
-                            Returned:{' '}
-                            {borrow.isReturned
-                              ? formatDate(borrow.returnDate)
-                              : 'Not yet'}
-                          </span>
+                          <span>{isDigitalBorrow ? 'Renewal Due:' : 'Due:'} {formatDate(borrow.dueDate)}</span>
+                          {isDigitalBorrow ? (
+                            <span>Last Renewed: {formatDate(borrow.lastRenewedAt)}</span>
+                          ) : (
+                            <span>
+                              Returned: {borrow.isReturned ? formatDate(borrow.returnDate) : isPendingReturn ? 'Pending Verification' : 'Not yet'}
+                            </span>
+                          )}
+                          {isDigitalBorrow && <span>Renewals: {renewalCount}</span>}
+                          {isPendingReturn && borrow.returnRequestedAt && (
+                            <span>Return Requested: {formatDate(borrow.returnRequestedAt)}</span>
+                          )}
                         </div>
                         {bookIdForAction && (
                           <span className="borrow-book-id">
                             Book ID: {bookIdForAction}
                           </span>
                         )}
+                        {isDigitalBorrow && borrow.accessLink && !isReturned && (
+                          <a
+                            href={borrow.accessLink}
+                            className="borrow-digital-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Open Google Drive Link ↗
+                          </a>
+                        )}
                       </div>
                       <div className="borrow-item-actions">
-                        <span className={`status-badge status-${status}`}>
-                          {status === 'returned'
-                            ? 'Returned'
-                            : status === 'overdue'
-                            ? 'Overdue'
-                            : 'Borrowed'}
+                        <span className={`status-badge status-${normalizedStatus}`}>
+                          {statusLabel}
                         </span>
-                        {!borrow.isReturned && bookIdForAction && (
-                          <button
-                            type="button"
-                            className="btn btn-success btn-small"
-                            onClick={() => handleReturn(borrow)}
-                            disabled={isProcessing}
-                          >
-                            {isProcessing ? 'Returning...' : 'Return Book'}
-                          </button>
-                        )}
+                        <div className="borrow-action-buttons">
+                          {canRenew && (
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-small"
+                              onClick={() => handleRenew(borrow)}
+                              disabled={isRenewProcessing}
+                            >
+                              {isRenewProcessing ? 'Renewing...' : 'Renew Access'}
+                            </button>
+                          )}
+                          {canReturn && (
+                            <button
+                              type="button"
+                              className="btn btn-success btn-small"
+                              onClick={() => handleReturn(borrow)}
+                              disabled={isReturnProcessing || isPendingReturn}
+                            >
+                              {isReturnProcessing
+                                ? 'Processing...'
+                                : isDigitalBorrow
+                                ? 'Return Access'
+                                : isPendingReturn
+                                ? 'Pending Verification'
+                                : 'Request Return'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );

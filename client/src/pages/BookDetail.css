@@ -90,7 +90,7 @@
 
 .availability-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 15px;
 }
 
@@ -132,11 +132,60 @@
   margin: 0;
 }
 
+.digital-resource {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.digital-resource h3 {
+  font-size: 18px;
+  color: #312e81;
+  margin: 0 0 12px 0;
+}
+
+.digital-resource p {
+  margin: 0;
+  color: #4338ca;
+  font-size: 14px;
+}
+
+.digital-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.digital-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
 .actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
   margin-top: 30px;
+}
+
+.return-note {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #b45309;
+  background: rgba(251, 191, 36, 0.2);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(217, 119, 6, 0.3);
 }
 
 .issued-history {
@@ -169,6 +218,19 @@
   margin: 8px 0;
   color: #6b7280;
   font-size: 14px;
+}
+
+.borrow-status.pending {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.2);
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .issue-info p:first-child {
