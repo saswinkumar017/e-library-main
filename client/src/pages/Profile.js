@@ -8,6 +8,7 @@ function Profile() {
   const [error, setError] = useState('');
   const [actionFeedback, setActionFeedback] = useState(null);
   const [processingBookId, setProcessingBookId] = useState(null);
+  const [renewingBookId, setRenewingBookId] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -40,6 +41,15 @@ function Profile() {
       setActionFeedback({
         type: 'error',
         message: 'Book information is unavailable for this record.'
+      });
+      return;
+    }
+
+    const isOffline = borrowEntry?.category === 'offline';
+    if (isOffline && profile?.role === 'user') {
+      setActionFeedback({
+        type: 'info',
+        message: 'Please contact the library staff to verify offline returns.'
       });
       return;
     }
@@ -78,7 +88,7 @@ function Profile() {
 
       setActionFeedback({
         type: 'success',
-        message: 'Book returned successfully.'
+        message: isOffline ? 'Offline return verified successfully.' : 'Online access closed.'
       });
     } catch (err) {
       setActionFeedback({

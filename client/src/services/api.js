@@ -57,8 +57,13 @@ export const bookAPI = {
     api.delete(`/books/${id}`),
   borrowBook: (bookId) =>
     api.post('/books/borrow', { bookId }),
-  returnBook: (bookId) =>
-    api.post('/books/return', { bookId }),
+  renewBook: (bookId) =>
+    api.post('/books/renew', { bookId }),
+  returnBook: (bookId, userId) =>
+    api.post('/books/return', {
+      bookId,
+      ...(userId ? { userId } : {})
+    }),
 };
 
 export const printoutAPI = {

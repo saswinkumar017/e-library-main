@@ -34,9 +34,21 @@ const userSchema = new mongoose.Schema({
   borrowedBooks: [
     {
       bookId: mongoose.Schema.Types.ObjectId,
+      bookTitle: String,
       borrowDate: Date,
       dueDate: Date,
       returnDate: Date,
+      category: {
+        type: String,
+        enum: ['offline', 'online'],
+        default: 'offline'
+      },
+      renewCount: {
+        type: Number,
+        default: 0
+      },
+      lastRenewedAt: Date,
+      accessLink: String,
       isReturned: {
         type: Boolean,
         default: false
