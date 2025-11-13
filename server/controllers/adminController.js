@@ -49,11 +49,21 @@ exports.getAllBooks = async (req, res) => {
   try {
     const books = await Book.find().sort({ createdAt: -1 });
     
-    const booksWithStats = books.map(book => ({
-      ...book.toObject(),
-      status: book.availableCopies > 0 ? 'Available' : 'Issued',
-      issuedCount: book.issuedCopies.filter(c => !c.isReturned).length
-    }));
+    const booksWithStats = books.map(book => {
+      const bookCategory = book.category || 'offline';
+      const issuedCount = book.issuedCopies.filter(c => !c.isReturned).length;
+
+      return {
+        ...book.toObject(),
+        category: bookCategory,
+        status: bookCategory === 'online'
+          ? 'Digital access'
+          : book.availableCopies > 0
+          ? 'Available'
+          : 'Issued',
+        issuedCount
+      };
+    });
 
     res.json(booksWithStats);
   } catch (error) {
@@ -61,10 +71,87 @@ exports.getAllBooks = async (req, res) => {
   }
 };
 
+exports.verifyOfflineReturn = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    const bookCategory = book.category || 'offline';
+    if (bookCategory !== 'offline') {
+      return res.status(400).json({ message: 'Only offline books require return verification' });
+    }
+
+    const issuedCopy = book.issuedCopies.find(
+      copy => !copy.isReturned && copy.userId.toString() === userId
+    );
+
+    if (!issuedCopy) {
+      return res.status(400).json({ message: 'No active borrow found for this user' });
+    }
+
+    const verificationDate = new Date();
+    issuedCopy.isReturned = true;
+    issuedCopy.status = 'returned';
+    issuedCopy.returnDate = verificationDate;
+    issuedCopy.returnVerifiedBy = req.userId;
+
+    book.availableCopies = Math.min(
+      book.totalCopies,
+      (book.availableCopies || 0) + 1
+    );
+    book.updatedAt = verificationDate;
+    await book.save();
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const borrowedEntry = user.borrowedBooks.find(
+      entry =>
+        !entry.isReturned &&
+        entry.bookId &&
+        entry.bookId.toString() === bookId
+    );
+
+    if (borrowedEntry) {
+      borrowedEntry.returnDate = verificationDate;
+      borrowedEntry.isReturned = true;
+      borrowedEntry.status = 'returned';
+    }
+
+    user.updatedAt = verificationDate;
+    await user.save();
+
+    res.json({
+      message: 'Offline book return verified successfully',
+      book,
+      user: {
+        id: user._id,
+        name: user.name
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getBookStats = async (req, res) => {
   try {
-    const totalBooks = await Book.countDocuments();
-    
+    const [totalBooks, onlineBooks] = await Promise.all([
+      Book.countDocuments(),
+      Book.countDocuments({ category: 'online' })
+    ]);
+
     const bookStats = await Book.aggregate([
       {
         $group: {
@@ -75,12 +162,20 @@ exports.getBookStats = async (req, res) => {
       }
     ]);
 
-    const issuedBooks = totalBooks > 0 ? bookStats[0].totalCopies - bookStats[0].availableCopies : 0;
+    const aggregatedStats = bookStats[0] || { totalCopies: 0, availableCopies: 0 };
+    const issuedBooks = totalBooks > 0
+      ? Math.max(0, (aggregatedStats.totalCopies || 0) - (aggregatedStats.availableCopies || 0))
+      : 0;
+
+    const offlineBooks = Math.max(totalBooks - onlineBooks, 0);
 
     res.json({
       totalBooks,
-      ...bookStats[0],
-      issuedBooks: issuedBooks || 0,
+      onlineBooks,
+      offlineBooks,
+      totalCopies: aggregatedStats.totalCopies || 0,
+      availableCopies: aggregatedStats.availableCopies || 0,
+      issuedBooks,
       borrowReturnStats: await getBorrowReturnStats()
     });
   } catch (error) {

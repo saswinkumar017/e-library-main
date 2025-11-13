@@ -57,6 +57,8 @@ export const bookAPI = {
     api.delete(`/books/${id}`),
   borrowBook: (bookId) =>
     api.post('/books/borrow', { bookId }),
+  renewBook: (bookId) =>
+    api.post('/books/renew', { bookId }),
   returnBook: (bookId) =>
     api.post('/books/return', { bookId }),
 };
@@ -103,6 +105,8 @@ export const adminAPI = {
     api.put(`/books/${id}`, data),
   deleteBook: (id) =>
     api.delete(`/books/${id}`),
+  verifyOfflineReturn: (bookId, userId) =>
+    api.put(`/admin/books/${bookId}/verify-return`, { userId }),
   getPrintoutStats: () =>
     api.get('/admin/printouts/stats'),
   getPendingPrintouts: () =>

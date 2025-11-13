@@ -167,6 +167,12 @@
   border: 1px solid rgba(239, 68, 68, 0.32);
 }
 
+.availability-badge .digital {
+  background: rgba(99, 102, 241, 0.18);
+  color: #312e81;
+  border: 1px solid rgba(99, 102, 241, 0.32);
+}
+
 .book-content {
   padding: 24px 24px 28px;
   flex: 1;
@@ -185,6 +191,34 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.book-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(148, 163, 184, 0.2);
+  color: #334155;
+}
+
+.category-pill.category-online {
+  background: rgba(79, 70, 229, 0.15);
+  color: #3730a3;
+}
+
+.category-pill.category-offline {
+  background: rgba(220, 38, 38, 0.15);
+  color: #991b1b;
 }
 
 .book-author {

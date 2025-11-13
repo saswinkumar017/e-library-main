@@ -9,6 +9,7 @@ function BookDetail() {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [renewing, setRenewing] = useState(false);
 
   useEffect(() => {
     fetchBookDetails();
@@ -30,8 +31,12 @@ function BookDetail() {
 
   const handleBorrow = async () => {
     try {
-      await bookAPI.borrowBook(id);
-      alert('Book borrowed successfully! Due date is 14 days from today.');
+      const response = await bookAPI.borrowBook(id);
+      const category = book?.category || 'offline';
+      const message = response.data?.message || (category === 'online'
+        ? 'Online book access granted for 15 days. Renew to maintain access.'
+        : 'Book borrowed successfully! Please return within the deadline.');
+      alert(message);
       fetchBookDetails();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to borrow book');
@@ -39,12 +44,37 @@ function BookDetail() {
   };
 
   const handleReturn = async () => {
+    const isOnline = (book?.category || 'offline') === 'online';
+    if (!isOnline) {
+      alert('Offline returns are verified by the admin team. Please return the physical copy at the library desk.');
+      return;
+    }
+
     try {
-      await bookAPI.returnBook(id);
-      alert('Book returned successfully');
+      const response = await bookAPI.returnBook(id);
+      alert(response.data?.message || 'Online access removed successfully.');
       fetchBookDetails();
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to return book');
+    }
+  };
+
+  const handleRenew = async () => {
+    const isOnline = (book?.category || 'offline') === 'online';
+    if (!isOnline) {
+      alert('Renewal is only available for online books.');
+      return;
+    }
+
+    setRenewing(true);
+    try {
+      const response = await bookAPI.renewBook(id);
+      alert(response.data?.message || 'Online access renewed for 15 more days.');
+      fetchBookDetails();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to renew access');
+    } finally {
+      setRenewing(false);
     }
   };
 
@@ -67,9 +97,51 @@ function BookDetail() {
     );
   }
 
-  const isBorrowedByUser = book.issuedCopies.some(
-    copy => !copy.isReturned && copy.userId === localStorage.getItem('userId')
-  );
+  const normalizeId = (value) => {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      if (value._id) return value._id;
+      if (typeof value.toString === 'function') return value.toString();
+    }
+    return null;
+  };
+
+  const storedUserRaw = localStorage.getItem('user');
+  let currentUserId = null;
+  if (storedUserRaw) {
+    try {
+      const parsed = JSON.parse(storedUserRaw);
+      currentUserId = parsed?.id || null;
+    } catch (err) {
+      currentUserId = null;
+    }
+  }
+
+  const issuedCopies = Array.isArray(book.issuedCopies) ? book.issuedCopies : [];
+  const userIssuedCopy = currentUserId
+    ? issuedCopies.find(copy => !copy.isReturned && normalizeId(copy.userId) === currentUserId)
+    : null;
+
+  const isBorrowedByUser = Boolean(userIssuedCopy);
+  const isOnline = (book.category || 'offline') === 'online';
+  const activeCopies = issuedCopies.filter(copy => !copy.isReturned);
+  const activeReadersCount = activeCopies.length;
+  const availableCount = book.availableCopies ?? 0;
+  const totalCopies = book.totalCopies ?? 0;
+  const issuedPhysicalCount = Math.max(totalCopies - availableCount, 0);
+  const renewalInterval = book.renewalIntervalDays || 15;
+  const userDueDate = userIssuedCopy?.dueDate ? new Date(userIssuedCopy.dueDate).toLocaleDateString() : null;
+  const locationLabel = isOnline ? 'Digital library' : book.location;
+  const canBorrow = isOnline || availableCount > 0;
+  const borrowDisabled = !canBorrow || isBorrowedByUser;
+  const borrowButtonLabel = isBorrowedByUser
+    ? 'Already Borrowed'
+    : isOnline
+    ? 'Access Online'
+    : canBorrow
+    ? 'Borrow Book'
+    : 'Not Available';
 
   return (
     <div className="book-detail">
@@ -97,6 +169,10 @@ function BookDetail() {
                 <span className="meta-value">{book.genre}</span>
               </div>
               <div className="meta-item">
+                <span className="meta-label">Category:</span>
+                <span className="meta-value">{isOnline ? 'Online (Digital)' : 'Offline (Physical)'}</span>
+              </div>
+              <div className="meta-item">
                 <span className="meta-label">Publication Year:</span>
                 <span className="meta-value">{book.publicationYear}</span>
               </div>
@@ -108,29 +184,50 @@ function BookDetail() {
               )}
               <div className="meta-item">
                 <span className="meta-label">Location:</span>
-                <span className="meta-value">{book.location}</span>
+                <span className="meta-value">{locationLabel}</span>
               </div>
             </div>
 
             <div className="availability-section">
               <h3>Availability</h3>
               <div className="availability-stats">
-                <div className="stat">
-                  <span className="stat-label">Total Copies:</span>
-                  <span className="stat-value">{book.totalCopies}</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-label">Available:</span>
-                  <span className="stat-value" style={{ color: '#16a34a' }}>
-                    {book.availableCopies}
-                  </span>
-                </div>
-                <div className="stat">
-                  <span className="stat-label">Issued:</span>
-                  <span className="stat-value" style={{ color: '#dc2626' }}>
-                    {book.totalCopies - book.availableCopies}
-                  </span>
-                </div>
+                {isOnline ? (
+                  <>
+                    <div className="stat">
+                      <span className="stat-label">Digital Access:</span>
+                      <span className="stat-value">Unlimited</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Renewal Cycle:</span>
+                      <span className="stat-value">{renewalInterval} days</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Active Readers:</span>
+                      <span className="stat-value" style={{ color: '#2563eb' }}>
+                        {activeReadersCount}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="stat">
+                      <span className="stat-label">Total Copies:</span>
+                      <span className="stat-value">{totalCopies}</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Available:</span>
+                      <span className="stat-value" style={{ color: '#16a34a' }}>
+                        {availableCount}
+                      </span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Issued:</span>
+                      <span className="stat-value" style={{ color: '#dc2626' }}>
+                        {issuedPhysicalCount}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -145,38 +242,78 @@ function BookDetail() {
               <button
                 onClick={handleBorrow}
                 className="btn btn-primary btn-large"
-                disabled={book.availableCopies === 0 || isBorrowedByUser}
+                disabled={borrowDisabled}
               >
-                {isBorrowedByUser ? 'Already Borrowed' : book.availableCopies > 0 ? 'Borrow Book' : 'Not Available'}
+                {borrowButtonLabel}
               </button>
 
-              {isBorrowedByUser && (
-                <button
-                  onClick={handleReturn}
-                  className="btn btn-success btn-large"
-                >
-                  Return Book
-                </button>
+              {isOnline && isBorrowedByUser && (
+                <>
+                  <button
+                    onClick={handleRenew}
+                    className="btn btn-primary btn-large"
+                    disabled={renewing}
+                  >
+                    {renewing ? 'Renewing...' : 'Renew Access'}
+                  </button>
+
+                  {book.googleDriveLink && (
+                    <a
+                      href={book.googleDriveLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-large"
+                    >
+                      Open Google Drive
+                    </a>
+                  )}
+
+                  <button
+                    onClick={handleReturn}
+                    className="btn btn-success btn-large"
+                  >
+                    Return Access
+                  </button>
+                </>
+              )}
+
+              {!isOnline && isBorrowedByUser && (
+                <div className="return-note">
+                  Return the physical copy at the admin desk for verification before the due date.
+                </div>
               )}
             </div>
+
+            {isOnline && isBorrowedByUser && userDueDate && (
+              <p className="renewal-note">Renew before <strong>{userDueDate}</strong> to keep uninterrupted access.</p>
+            )}
           </div>
         </div>
 
-        {book.issuedCopies.length > 0 && (
+        {issuedCopies.length > 0 && (
           <div className="issued-history">
-            <h3>Current Borrowers</h3>
+            <h3>{isOnline ? 'Active Readers' : 'Current Borrowers'}</h3>
             <div className="issue-list">
-              {book.issuedCopies
+              {issuedCopies
                 .filter(copy => !copy.isReturned)
-                .map((copy, index) => (
-                  <div key={index} className="issue-item">
-                    <div className="issue-info">
-                      <p><strong>Borrower:</strong> {copy.borrowerName}</p>
-                      <p><strong>Issued Date:</strong> {new Date(copy.issueDate).toLocaleDateString()}</p>
-                      <p><strong>Due Date:</strong> {new Date(copy.dueDate).toLocaleDateString()}</p>
+                .map((copy, index) => {
+                  const issuedDate = copy.issueDate ? new Date(copy.issueDate).toLocaleDateString() : '—';
+                  const dueDate = copy.dueDate ? new Date(copy.dueDate).toLocaleDateString() : '—';
+                  const lastRenewed = copy.lastRenewedAt ? new Date(copy.lastRenewedAt).toLocaleDateString() : null;
+
+                  return (
+                    <div key={index} className="issue-item">
+                      <div className="issue-info">
+                        <p><strong>Borrower:</strong> {copy.borrowerName}</p>
+                        <p><strong>Issued Date:</strong> {issuedDate}</p>
+                        <p><strong>{isOnline ? 'Renewal Due:' : 'Due Date:'}</strong> {dueDate}</p>
+                        {isOnline && lastRenewed && (
+                          <p><strong>Last Renewed:</strong> {lastRenewed}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         )}

@@ -19,6 +19,7 @@ router.put('/users/:userId/reactivate', superadminMiddleware, adminController.re
 // Book management (both admin and superadmin)
 router.get('/books', adminMiddleware, adminController.getAllBooks);
 router.get('/books/stats', adminMiddleware, adminController.getBookStats);
+router.put('/books/:bookId/verify-return', adminMiddleware, adminController.verifyOfflineReturn);
 
 // Printouts stats
 router.get('/printouts/stats', adminMiddleware, adminController.getPrintoutStats);

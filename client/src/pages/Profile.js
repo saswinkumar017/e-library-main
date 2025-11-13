@@ -8,6 +8,7 @@ function Profile() {
   const [error, setError] = useState('');
   const [actionFeedback, setActionFeedback] = useState(null);
   const [processingBookId, setProcessingBookId] = useState(null);
+  const [renewingBookId, setRenewingBookId] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -40,6 +41,14 @@ function Profile() {
       setActionFeedback({
         type: 'error',
         message: 'Book information is unavailable for this record.'
+      });
+      return;
+    }
+
+    if (borrowEntry?.bookCategory === 'offline') {
+      setActionFeedback({
+        type: 'info',
+        message: 'Return physical copies at the admin desk for verification.'
       });
       return;
     }
@@ -87,6 +96,72 @@ function Profile() {
       });
     } finally {
       setProcessingBookId(null);
+    }
+  };
+
+  const handleRenewAccess = async (borrowEntry) => {
+    const targetBookId = resolveBookId(borrowEntry);
+
+    if (!targetBookId) {
+      setActionFeedback({
+        type: 'error',
+        message: 'Book information is unavailable for this record.'
+      });
+      return;
+    }
+
+    if (borrowEntry?.bookCategory !== 'online') {
+      setActionFeedback({
+        type: 'info',
+        message: 'Renewal is available only for online books.'
+      });
+      return;
+    }
+
+    setRenewingBookId(targetBookId);
+    setActionFeedback(null);
+
+    try {
+      const response = await bookAPI.renewBook(targetBookId);
+      const newDueDate = response.data?.dueDate || null;
+      const now = new Date().toISOString();
+
+      setProfile(prevProfile => {
+        if (!prevProfile) {
+          return prevProfile;
+        }
+
+        const updatedBorrowedBooks = Array.isArray(prevProfile.borrowedBooks)
+          ? prevProfile.borrowedBooks.map(entry => {
+              const entryBookId = resolveBookId(entry);
+              if (entryBookId === targetBookId) {
+                return {
+                  ...entry,
+                  dueDate: newDueDate || entry.dueDate,
+                  lastRenewedAt: now
+                };
+              }
+              return entry;
+            })
+          : [];
+
+        return {
+          ...prevProfile,
+          borrowedBooks: updatedBorrowedBooks
+        };
+      });
+
+      setActionFeedback({
+        type: 'success',
+        message: 'Online access renewed successfully.'
+      });
+    } catch (err) {
+      setActionFeedback({
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to renew access. Please try again.'
+      });
+    } finally {
+      setRenewingBookId(null);
     }
   };
 
@@ -284,6 +359,7 @@ function Profile() {
                 .slice()
                 .reverse()
                 .map((borrow, index) => {
+                  const isOnlineBorrow = borrow.bookCategory === 'online';
                   const isOverdue =
                     !borrow.isReturned &&
                     borrow.dueDate &&
@@ -295,6 +371,9 @@ function Profile() {
                     : 'active';
                   const bookIdForAction = resolveBookId(borrow);
                   const isProcessing = Boolean(bookIdForAction && processingBookId === bookIdForAction);
+                  const isRenewing = Boolean(bookIdForAction && renewingBookId === bookIdForAction);
+                  const dueLabel = isOnlineBorrow ? 'Renewal Due' : 'Due';
+                  const lastRenewedLabel = borrow.lastRenewedAt ? formatDate(borrow.lastRenewedAt) : null;
 
                   return (
                     <div
@@ -304,8 +383,9 @@ function Profile() {
                       <div className="borrow-item-main">
                         <h4>{borrow.bookTitle || 'Book'}</h4>
                         <div className="borrow-meta">
+                          <span>Category: {isOnlineBorrow ? 'Online' : 'Offline'}</span>
                           <span>Borrowed: {formatDate(borrow.borrowDate)}</span>
-                          <span>Due: {formatDate(borrow.dueDate)}</span>
+                          <span>{dueLabel}: {formatDate(borrow.dueDate)}</span>
                           <span>
                             Returned:{' '}
                             {borrow.isReturned
@@ -313,6 +393,11 @@ function Profile() {
                               : 'Not yet'}
                           </span>
                         </div>
+                        {isOnlineBorrow && lastRenewedLabel && (
+                          <div className="borrow-meta-secondary">
+                            <span>Last Renewed: {lastRenewedLabel}</span>
+                          </div>
+                        )}
                         {bookIdForAction && (
                           <span className="borrow-book-id">
                             Book ID: {bookIdForAction}
@@ -324,18 +409,43 @@ function Profile() {
                           {status === 'returned'
                             ? 'Returned'
                             : status === 'overdue'
-                            ? 'Overdue'
+                            ? isOnlineBorrow ? 'Renewal Overdue' : 'Overdue'
+                            : isOnlineBorrow
+                            ? 'Active Access'
                             : 'Borrowed'}
                         </span>
-                        {!borrow.isReturned && bookIdForAction && (
+                        {isOnlineBorrow && borrow.googleDriveLink && !borrow.isReturned && (
+                          <a
+                            href={borrow.googleDriveLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-outline btn-small"
+                          >
+                            Open Google Drive
+                          </a>
+                        )}
+                        {isOnlineBorrow && !borrow.isReturned && bookIdForAction && (
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-small"
+                            onClick={() => handleRenewAccess(borrow)}
+                            disabled={isRenewing}
+                          >
+                            {isRenewing ? 'Renewing...' : 'Renew Access'}
+                          </button>
+                        )}
+                        {isOnlineBorrow && !borrow.isReturned && bookIdForAction && (
                           <button
                             type="button"
                             className="btn btn-success btn-small"
                             onClick={() => handleReturn(borrow)}
                             disabled={isProcessing}
                           >
-                            {isProcessing ? 'Returning...' : 'Return Book'}
+                            {isProcessing ? 'Returning...' : 'Return Access'}
                           </button>
+                        )}
+                        {!isOnlineBorrow && !borrow.isReturned && (
+                          <span className="offline-return-note">Return at admin desk</span>
                         )}
                       </div>
                     </div>

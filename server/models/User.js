@@ -1,6 +1,33 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const borrowedBookSchema = new mongoose.Schema(
+  {
+    bookId: mongoose.Schema.Types.ObjectId,
+    bookTitle: String,
+    bookCategory: {
+      type: String,
+      enum: ['offline', 'online'],
+      default: 'offline'
+    },
+    googleDriveLink: String,
+    borrowDate: Date,
+    dueDate: Date,
+    lastRenewedAt: Date,
+    returnDate: Date,
+    status: {
+      type: String,
+      enum: ['borrowed', 'pending_admin_verification', 'returned', 'expired'],
+      default: 'borrowed'
+    },
+    isReturned: {
+      type: Boolean,
+      default: false
+    }
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -31,18 +58,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  borrowedBooks: [
-    {
-      bookId: mongoose.Schema.Types.ObjectId,
-      borrowDate: Date,
-      dueDate: Date,
-      returnDate: Date,
-      isReturned: {
-        type: Boolean,
-        default: false
-      }
-    }
-  ],
+  borrowedBooks: [borrowedBookSchema],
   totalPrintoutSpent: {
     type: Number,
     default: 0

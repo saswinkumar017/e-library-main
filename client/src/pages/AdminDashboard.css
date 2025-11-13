@@ -166,9 +166,9 @@
   padding: 20px;
   border: 1px solid #e5e7eb;
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: minmax(220px, 1.6fr) minmax(200px, 1fr) auto;
   gap: 30px;
-  align-items: center;
+  align-items: start;
   transition: all 0.3s ease;
 }
 
@@ -204,6 +204,60 @@
 .book-info .details {
   font-size: 12px;
   color: #9ca3af;
+}
+
+.book-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.category-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.category-online {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
+.category-offline {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.digital-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.digital-link:hover {
+  text-decoration: underline;
+}
+
+.readonly-field {
+  background-color: #eef2ff;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
 }
 
 .user-meta {
@@ -283,12 +337,21 @@
   color: #991b1b;
 }
 
+.book-stats .status.Digital-access {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
 .user-actions,
 .book-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.book-actions {
+  align-self: start;
 }
 
 .info-text {
@@ -298,6 +361,55 @@
   padding: 4px 8px;
   background-color: #f3f4f6;
   border-radius: 4px;
+}
+
+.book-borrowers {
+  grid-column: 1 / -1;
+  background: #f3f4f6;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.book-borrowers h5 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #1f2937;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.borrower-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0;
+  border-top: 1px solid #d1d5db;
+  flex-wrap: wrap;
+}
+
+.borrower-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.borrower-details {
+  display: grid;
+  gap: 4px;
+}
+
+.borrower-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.borrower-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .section-header {
