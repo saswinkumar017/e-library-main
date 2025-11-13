@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, bookAPI } from '../services/api';
 import './Profile.css';
 
 function Profile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionFeedback, setActionFeedback] = useState(null);
+  const [processingBookId, setProcessingBookId] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -21,6 +23,72 @@ function Profile() {
 
     fetchProfile();
   }, []);
+
+  const resolveBookId = (borrowEntry) => {
+    if (!borrowEntry) {
+      return '';
+    }
+
+    const value = borrowEntry.bookId?._id || borrowEntry.bookId;
+    return value ? value.toString() : '';
+  };
+
+  const handleReturn = async (borrowEntry) => {
+    const targetBookId = resolveBookId(borrowEntry);
+
+    if (!targetBookId) {
+      setActionFeedback({
+        type: 'error',
+        message: 'Book information is unavailable for this record.'
+      });
+      return;
+    }
+
+    setProcessingBookId(targetBookId);
+    setActionFeedback(null);
+
+    try {
+      await bookAPI.returnBook(targetBookId);
+      const now = new Date().toISOString();
+
+      setProfile(prevProfile => {
+        if (!prevProfile) {
+          return prevProfile;
+        }
+
+        const updatedBorrowedBooks = Array.isArray(prevProfile.borrowedBooks)
+          ? prevProfile.borrowedBooks.map(entry => {
+              const entryBookId = resolveBookId(entry);
+              if (entryBookId === targetBookId) {
+                return {
+                  ...entry,
+                  isReturned: true,
+                  returnDate: now
+                };
+              }
+              return entry;
+            })
+          : [];
+
+        return {
+          ...prevProfile,
+          borrowedBooks: updatedBorrowedBooks
+        };
+      });
+
+      setActionFeedback({
+        type: 'success',
+        message: 'Book returned successfully.'
+      });
+    } catch (err) {
+      setActionFeedback({
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to return the book. Please try again.'
+      });
+    } finally {
+      setProcessingBookId(null);
+    }
+  };
 
   const formatDate = (value, options) => {
     if (!value) {
@@ -191,6 +259,20 @@ function Profile() {
             <p>Track your recent book borrowings and due dates</p>
           </div>
 
+          {actionFeedback && (
+            <div
+              className={`alert ${
+                actionFeedback.type === 'success'
+                  ? 'alert-success'
+                  : actionFeedback.type === 'error'
+                  ? 'alert-error'
+                  : 'alert-info'
+              }`}
+            >
+              {actionFeedback.message}
+            </div>
+          )}
+
           {totalBorrowed === 0 ? (
             <div className="profile-empty-state">
               <div className="empty-icon">📚</div>
@@ -211,6 +293,8 @@ function Profile() {
                     : isOverdue
                     ? 'overdue'
                     : 'active';
+                  const bookIdForAction = resolveBookId(borrow);
+                  const isProcessing = Boolean(bookIdForAction && processingBookId === bookIdForAction);
 
                   return (
                     <div
@@ -229,19 +313,31 @@ function Profile() {
                               : 'Not yet'}
                           </span>
                         </div>
-                        {borrow.bookId && (
+                        {bookIdForAction && (
                           <span className="borrow-book-id">
-                            Book ID: {borrow.bookId}
+                            Book ID: {bookIdForAction}
                           </span>
                         )}
                       </div>
-                      <span className={`status-badge status-${status}`}>
-                        {status === 'returned'
-                          ? 'Returned'
-                          : status === 'overdue'
-                          ? 'Overdue'
-                          : 'Borrowed'}
-                      </span>
+                      <div className="borrow-item-actions">
+                        <span className={`status-badge status-${status}`}>
+                          {status === 'returned'
+                            ? 'Returned'
+                            : status === 'overdue'
+                            ? 'Overdue'
+                            : 'Borrowed'}
+                        </span>
+                        {!borrow.isReturned && bookIdForAction && (
+                          <button
+                            type="button"
+                            className="btn btn-success btn-small"
+                            onClick={() => handleReturn(borrow)}
+                            disabled={isProcessing}
+                          >
+                            {isProcessing ? 'Returning...' : 'Return Book'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
