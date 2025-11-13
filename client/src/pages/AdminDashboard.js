@@ -21,7 +21,9 @@ function AdminDashboard() {
     isbn: '',
     description: '',
     location: 'Main library',
-    totalCopies: 1
+    totalCopies: 1,
+    category: 'offline',
+    googleDriveLink: ''
   });
 
   useEffect(() => {
@@ -33,13 +35,13 @@ function AdminDashboard() {
     setError('');
     try {
       if (activeTab === 'overview') {
-        const [stats, bookStats, printStats] = await Promise.all([
+        const [stats, bookStatsResponse, printStats] = await Promise.all([
           adminAPI.getUserStats(),
           adminAPI.getBookStats(),
           adminAPI.getPrintoutStats()
         ]);
         setUserStats(stats.data);
-        setBookStats(stats.data);
+        setBookStats(bookStatsResponse.data);
         setPrintoutStats(printStats.data);
       } else if (activeTab === 'users') {
         const response = await adminAPI.getAllUsers();
@@ -85,10 +87,30 @@ function AdminDashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'publicationYear' || name === 'totalCopies' ? parseInt(value) : value
-    }));
+    setFormData(prev => {
+      if (name === 'category') {
+        const nextCategory = value;
+        return {
+          ...prev,
+          category: nextCategory,
+          location: nextCategory === 'online' ? 'Digital library' : prev.location || 'Main library',
+          totalCopies: nextCategory === 'online' ? 0 : prev.totalCopies || 1,
+          googleDriveLink: nextCategory === 'online' ? prev.googleDriveLink : ''
+        };
+      }
+
+      if (name === 'publicationYear' || name === 'totalCopies') {
+        return {
+          ...prev,
+          [name]: value === '' ? '' : parseInt(value, 10)
+        };
+      }
+
+      return {
+        ...prev,
+        [name]: value
+      };
+    });
   };
 
   const resetForm = () => {
@@ -100,7 +122,9 @@ function AdminDashboard() {
       isbn: '',
       description: '',
       location: 'Main library',
-      totalCopies: 1
+      totalCopies: 1,
+      category: 'offline',
+      googleDriveLink: ''
     });
     setEditingBook(null);
     setShowAddBookForm(false);
@@ -115,8 +139,39 @@ function AdminDashboard() {
       return;
     }
 
+    const publicationYearValue = parseInt(formData.publicationYear, 10);
+    if (Number.isNaN(publicationYearValue)) {
+      setError('Publication year must be a valid number');
+      return;
+    }
+
+    if (formData.category === 'online' && !formData.googleDriveLink.trim()) {
+      setError('Google Drive link is required for online books');
+      return;
+    }
+
+    if (formData.category === 'offline') {
+      const copiesValue = parseInt(formData.totalCopies, 10);
+      if (Number.isNaN(copiesValue) || copiesValue < 1) {
+        setError('Please specify a valid number of copies for offline books');
+        return;
+      }
+    }
+
+    const payload = {
+      ...formData,
+      publicationYear: publicationYearValue,
+      location: formData.category === 'online' ? 'Digital library' : formData.location,
+      totalCopies: formData.category === 'offline' ? parseInt(formData.totalCopies, 10) : 0,
+      googleDriveLink: formData.category === 'online' ? formData.googleDriveLink.trim() : undefined
+    };
+
+    if (payload.category !== 'online') {
+      delete payload.googleDriveLink;
+    }
+
     try {
-      await adminAPI.createBook(formData);
+      await adminAPI.createBook(payload);
       alert('Book added successfully');
       resetForm();
       fetchAdminData();
@@ -126,6 +181,7 @@ function AdminDashboard() {
   };
 
   const handleEditBook = (book) => {
+    const bookCategory = book.category || 'offline';
     setEditingBook(book._id);
     setFormData({
       title: book.title,
@@ -134,8 +190,10 @@ function AdminDashboard() {
       publicationYear: book.publicationYear,
       isbn: book.isbn || '',
       description: book.description || '',
-      location: book.location,
-      totalCopies: book.totalCopies
+      location: bookCategory === 'online' ? 'Digital library' : book.location || 'Main library',
+      totalCopies: bookCategory === 'online' ? 0 : book.totalCopies || 1,
+      category: bookCategory,
+      googleDriveLink: book.googleDriveLink || ''
     });
     setShowAddBookForm(true);
   };
@@ -144,13 +202,49 @@ function AdminDashboard() {
     e.preventDefault();
     setError('');
 
+    if (!editingBook) {
+      setError('No book selected for update');
+      return;
+    }
+
     if (!formData.title || !formData.author || !formData.genre || !formData.publicationYear) {
       setError('Please fill in all required fields');
       return;
     }
 
+    const publicationYearValue = parseInt(formData.publicationYear, 10);
+    if (Number.isNaN(publicationYearValue)) {
+      setError('Publication year must be a valid number');
+      return;
+    }
+
+    if (formData.category === 'online' && !formData.googleDriveLink.trim()) {
+      setError('Google Drive link is required for online books');
+      return;
+    }
+
+    if (formData.category === 'offline') {
+      const copiesValue = parseInt(formData.totalCopies, 10);
+      if (Number.isNaN(copiesValue) || copiesValue < 1) {
+        setError('Please specify a valid number of copies for offline books');
+        return;
+      }
+    }
+
+    const payload = {
+      ...formData,
+      publicationYear: publicationYearValue,
+      location: formData.category === 'online' ? 'Digital library' : formData.location,
+      totalCopies: formData.category === 'offline' ? parseInt(formData.totalCopies, 10) : 0,
+      googleDriveLink: formData.category === 'online' ? formData.googleDriveLink.trim() : undefined
+    };
+
+    if (payload.category !== 'online') {
+      delete payload.googleDriveLink;
+    }
+
     try {
-      await adminAPI.updateBook(editingBook, formData);
+      await adminAPI.updateBook(editingBook, payload);
       alert('Book updated successfully');
       resetForm();
       fetchAdminData();
@@ -168,6 +262,25 @@ function AdminDashboard() {
       } catch (error) {
         alert('Failed to delete book');
       }
+    }
+  };
+
+  const handleVerifyReturn = async (bookId, userId, borrowerName) => {
+    if (!userId) {
+      alert('Borrower information is unavailable for this record.');
+      return;
+    }
+
+    if (!window.confirm(`Verify return for ${borrowerName || 'this borrower'}?`)) {
+      return;
+    }
+
+    try {
+      await adminAPI.verifyOfflineReturn(bookId, userId);
+      alert('Return verified successfully');
+      fetchAdminData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to verify return');
     }
   };
 
@@ -275,6 +388,24 @@ function AdminDashboard() {
                   <div className="stat-content">
                     <div className="stat-value">{bookStats?.borrowReturnStats?.overdue || 0}</div>
                     <div className="stat-label">Overdue Books</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-icon">🌐</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{bookStats?.onlineBooks || 0}</div>
+                    <div className="stat-label">Digital Titles</div>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-icon">🏛️</div>
+                  <div className="stat-content">
+                    <div className="stat-value">{bookStats?.offlineBooks || 0}</div>
+                    <div className="stat-label">Physical Titles</div>
                   </div>
                 </div>
               </div>
@@ -466,6 +597,67 @@ function AdminDashboard() {
 
                   <div className="form-row">
                     <div className="form-group">
+                      <label htmlFor="category">Category *</label>
+                      <select
+                        id="category"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleInputChange}
+                      >
+                        <option value="offline">Offline (Physical)</option>
+                        <option value="online">Online (Digital)</option>
+                      </select>
+                    </div>
+                    {formData.category === 'online' ? (
+                      <div className="form-group">
+                        <label htmlFor="googleDriveLink">Google Drive Link *</label>
+                        <input
+                          type="url"
+                          id="googleDriveLink"
+                          name="googleDriveLink"
+                          value={formData.googleDriveLink}
+                          onChange={handleInputChange}
+                          placeholder="https://drive.google.com/..."
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <div className="form-group">
+                        <label htmlFor="location">Location</label>
+                        <select
+                          id="location"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                        >
+                          <option>Main library</option>
+                          <option>Sub library</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-row">
+                    {formData.category === 'offline' ? (
+                      <div className="form-group">
+                        <label htmlFor="totalCopies">Total Copies *</label>
+                        <input
+                          type="number"
+                          id="totalCopies"
+                          name="totalCopies"
+                          value={formData.totalCopies}
+                          onChange={handleInputChange}
+                          min="1"
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <div className="form-group">
+                        <label>Digital Access</label>
+                        <div className="readonly-field">Unlimited access • Renew every 15 days</div>
+                      </div>
+                    )}
+                    <div className="form-group">
                       <label htmlFor="isbn">ISBN</label>
                       <input
                         type="text"
@@ -475,33 +667,10 @@ function AdminDashboard() {
                         onChange={handleInputChange}
                       />
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="location">Location</label>
-                      <select
-                        id="location"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                      >
-                        <option>Main library</option>
-                        <option>Sub library</option>
-                      </select>
-                    </div>
                   </div>
 
                   <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="totalCopies">Total Copies</label>
-                      <input
-                        type="number"
-                        id="totalCopies"
-                        name="totalCopies"
-                        value={formData.totalCopies}
-                        onChange={handleInputChange}
-                        min="1"
-                      />
-                    </div>
-                    <div className="form-group">
+                    <div className="form-group full-width">
                       <label htmlFor="description">Description</label>
                       <textarea
                         id="description"
@@ -528,56 +697,113 @@ function AdminDashboard() {
                 <p>No books found</p>
               ) : (
                 <div className="books-table">
-                  {books.map((book) => (
-                    <div key={book._id} className="book-item">
-                      <div className="book-info">
-                        <h4>{book.title}</h4>
-                        <p className="author">by {book.author}</p>
-                        <p className="details">
-                          {book.genre} • {book.publicationYear} • {book.location}
-                        </p>
-                      </div>
+                  {books.map((book) => {
+                    const category = book.category || 'offline';
+                    const isOnline = category === 'online';
+                    const locationLabel = isOnline ? 'Digital library' : book.location;
+                    const availableLabel = isOnline ? 'Unlimited' : book.availableCopies;
+                    const totalLabel = isOnline ? '—' : book.totalCopies;
+                    const statusLabel = isOnline ? 'Digital access' : book.status;
+                    const statusClass = statusLabel ? statusLabel.replace(/\s+/g, '-') : '';
+                    const activeBorrowers = Array.isArray(book.issuedCopies)
+                      ? book.issuedCopies.filter(copy => !copy.isReturned)
+                      : [];
+                    const issuedCount =
+                      typeof book.issuedCount === 'number' ? book.issuedCount : activeBorrowers.length;
 
-                      <div className="book-stats">
-                        <div className="stat">
-                          <span className="label">Total:</span>
-                          <span className="value">{book.totalCopies}</span>
+                    return (
+                      <div key={book._id} className="book-item">
+                        <div className="book-info">
+                          <div className="book-info-header">
+                            <h4>{book.title}</h4>
+                            <span className={`category-badge category-${category}`}>
+                              {isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          </div>
+                          <p className="author">by {book.author}</p>
+                          <p className="details">
+                            {book.genre} • {book.publicationYear} • {locationLabel}
+                          </p>
+                          {isOnline && book.googleDriveLink && (
+                            <a
+                              href={book.googleDriveLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="digital-link"
+                            >
+                              Open Google Drive
+                            </a>
+                          )}
                         </div>
-                        <div className="stat">
-                          <span className="label">Available:</span>
-                          <span className="value" style={{ color: '#16a34a' }}>
-                            {book.availableCopies}
-                          </span>
-                        </div>
-                        <div className="stat">
-                          <span className="label">Issued:</span>
-                          <span className="value" style={{ color: '#dc2626' }}>
-                            {book.issuedCount}
-                          </span>
-                        </div>
-                        <div className="stat">
-                          <span className={`status ${book.status}`}>
-                            {book.status}
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="book-actions">
-                        <button
-                          onClick={() => handleEditBook(book)}
-                          className="btn btn-secondary btn-small"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteBook(book._id)}
-                          className="btn btn-danger btn-small"
-                        >
-                          Delete
-                        </button>
+                        <div className="book-stats">
+                          <div className="stat">
+                            <span className="label">Total:</span>
+                            <span className="value">{totalLabel}</span>
+                          </div>
+                          <div className="stat">
+                            <span className="label">Available:</span>
+                            <span className="value" style={{ color: isOnline ? '#4f46e5' : '#16a34a' }}>
+                              {availableLabel}
+                            </span>
+                          </div>
+                          <div className="stat">
+                            <span className="label">Active Readers:</span>
+                            <span className="value" style={{ color: '#dc2626' }}>
+                              {issuedCount}
+                            </span>
+                          </div>
+                          <div className="stat">
+                            <span className={`status ${statusClass}`}>
+                              {statusLabel}
+                            </span>
+                          </div>
+                        </div>
+
+                        {!isOnline && activeBorrowers.length > 0 && (
+                          <div className="book-borrowers">
+                            <h5>Active Borrowers</h5>
+                            {activeBorrowers.map((copy, index) => {
+                              const borrowerIdRaw = copy.userId?._id || copy.userId;
+                              const borrowerId = borrowerIdRaw ? borrowerIdRaw.toString() : '';
+                              const dueDate = copy.dueDate ? new Date(copy.dueDate).toLocaleDateString() : '—';
+                              const issueDate = copy.issueDate ? new Date(copy.issueDate).toLocaleDateString() : '—';
+                              return (
+                                <div key={`${borrowerId}-${index}`} className="borrower-item">
+                                  <div className="borrower-details">
+                                    <p className="borrower-name">{copy.borrowerName || 'Borrower'}</p>
+                                    <p className="borrower-meta">Issued: {issueDate}</p>
+                                    <p className="borrower-meta">Due: {dueDate}</p>
+                                  </div>
+                                  <button
+                                    onClick={() => handleVerifyReturn(book._id, borrowerId, copy.borrowerName)}
+                                    className="btn btn-success btn-small"
+                                  >
+                                    Verify Return
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="book-actions">
+                          <button
+                            onClick={() => handleEditBook(book)}
+                            className="btn btn-secondary btn-small"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBook(book._id)}
+                            className="btn btn-danger btn-small"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
